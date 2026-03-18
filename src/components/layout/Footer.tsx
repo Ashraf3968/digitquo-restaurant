@@ -22,6 +22,7 @@ export default function Footer() {
                 {item.label}
               </Link>
             ))}
+            <Link to="/terms" className="transition hover:text-stone-900">Terms & Conditions</Link>
           </div>
         </div>
         <div>
@@ -41,7 +42,7 @@ export default function Footer() {
           </div>
           <form className="mt-6 rounded-[1.75rem] border border-stone-200 bg-stone-50 p-4">
             <label className="text-sm font-medium text-stone-900">Join the newsletter</label>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <input className="min-w-0 flex-1 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-sm outline-none ring-0" placeholder="Email address" />
               <button type="button" className="rounded-full bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600">
                 Join
@@ -56,4 +57,3 @@ export default function Footer() {
     </footer>
   );
 }
-

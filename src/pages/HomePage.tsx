@@ -1,12 +1,19 @@
 import { Link } from "react-router-dom";
 import MotionBlock from "../components/common/MotionBlock";
 import SectionIntro from "../components/common/SectionIntro";
+import StarRating from "../components/common/StarRating";
 import { faqItems, featuredDishes, galleryImages, highlights, siteMeta, testimonials, videoItems } from "../data/site";
+
+const serviceMoments = [
+  "Tasting menus guided by seasonal ingredients and fire-led techniques.",
+  "Private dining experiences for corporate hosting and celebrations.",
+  "Concierge-style reservations designed to convert from every screen size.",
+];
 
 export default function HomePage() {
   return (
     <>
-      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:pb-24 lg:pt-12">
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:pb-24 lg:pt-12 xl:gap-16">
         <MotionBlock className="flex flex-col justify-center">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-700/80">Luxury Dining Experience</p>
           <h1 className="mt-6 max-w-3xl font-serif text-5xl leading-[0.95] text-stone-900 sm:text-6xl lg:text-7xl">
@@ -35,15 +42,23 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+          <div className="mt-8 grid gap-3 sm:max-w-xl">
+            {serviceMoments.map((moment) => (
+              <div key={moment} className="flex items-start gap-3 rounded-[1.35rem] bg-white/65 px-4 py-3 shadow-[0_16px_35px_rgba(221,210,192,0.22)]">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-amber-500" />
+                <p className="text-sm leading-7 text-stone-600">{moment}</p>
+              </div>
+            ))}
+          </div>
         </MotionBlock>
         <MotionBlock delay={0.1} className="relative">
           <div className="absolute -left-6 top-8 h-40 w-40 rounded-full bg-amber-200/40 blur-3xl" />
           <img
             src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1400&q=80"
             alt="Elegant restaurant dining room"
-            className="h-full min-h-[520px] w-full rounded-[2rem] object-cover shadow-[0_35px_90px_rgba(212,187,156,0.45)]"
+            className="h-full min-h-[420px] w-full rounded-[2rem] object-cover shadow-[0_35px_90px_rgba(212,187,156,0.45)] sm:min-h-[520px]"
           />
-          <div className="absolute bottom-6 left-6 rounded-[1.75rem] border border-white/70 bg-white/80 p-5 shadow-xl backdrop-blur">
+          <div className="absolute bottom-4 left-4 right-4 rounded-[1.75rem] border border-white/70 bg-white/85 p-5 shadow-xl backdrop-blur sm:bottom-6 sm:left-6 sm:right-auto">
             <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Signature ambiance</p>
             <p className="mt-2 max-w-xs text-sm leading-6 text-stone-700">Soft natural light, sculpted interiors, and an atmosphere designed for memorable evenings.</p>
           </div>
@@ -62,7 +77,7 @@ export default function HomePage() {
                   <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{dish.tag}</span>
                 </div>
                 <p className="mt-4 text-sm leading-7 text-stone-600">{dish.description}</p>
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-6 flex items-center justify-between gap-4">
                   <span className="text-lg font-semibold text-stone-900">{dish.price}</span>
                   <Link to="/menu" className="text-sm font-semibold text-stone-900 transition hover:text-amber-700">See full menu</Link>
                 </div>
@@ -73,7 +88,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
-        <div className="grid gap-10 rounded-[2.5rem] border border-white/70 bg-white/70 p-8 shadow-[0_24px_80px_rgba(221,210,192,0.4)] backdrop-blur lg:grid-cols-[0.9fr_1.1fr] lg:p-12">
+        <div className="grid gap-10 rounded-[2.5rem] border border-white/70 bg-white/70 p-6 shadow-[0_24px_80px_rgba(221,210,192,0.4)] backdrop-blur lg:grid-cols-[0.9fr_1.1fr] lg:p-12">
           <MotionBlock>
             <SectionIntro eyebrow="About Maison Ember" title="Built around calm luxury, quality ingredients, and impeccable hospitality." description="This concept showcases how an agency-grade website can balance beautiful storytelling with strong booking-focused UX." />
             <Link to="/about" className="mt-8 inline-flex rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 transition hover:border-amber-300 hover:bg-amber-50">Discover our story</Link>
@@ -102,7 +117,10 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="mt-5 text-sm leading-7 text-stone-600">{testimonial.quote}</p>
-              <p className="mt-4 text-amber-600">{"?".repeat(testimonial.rating)}<span className="text-stone-300">{"?".repeat(5 - testimonial.rating)}</span></p>
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <StarRating rating={testimonial.rating} size="sm" />
+                <Link to="/reviews" className="text-sm font-semibold text-stone-900 transition hover:text-amber-700">Read all reviews</Link>
+              </div>
             </MotionBlock>
           ))}
         </div>
@@ -142,10 +160,10 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
-        <div className="rounded-[2.5rem] bg-stone-900 px-8 py-12 text-white lg:flex lg:items-center lg:justify-between lg:px-12">
+        <div className="rounded-[2.5rem] bg-stone-900 px-6 py-12 text-white lg:flex lg:items-center lg:justify-between lg:px-12">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-300/80">Reservation CTA</p>
-            <h2 className="mt-4 font-serif text-4xl leading-tight">Turn interest into bookings with a clear, elegant reservation journey.</h2>
+            <h2 className="mt-4 font-serif text-3xl leading-tight sm:text-4xl">Turn interest into bookings with a clear, elegant reservation journey.</h2>
             <p className="mt-4 text-base leading-8 text-white/70">Strategically placed call-to-actions keep the experience polished while improving conversion across mobile and desktop.</p>
           </div>
           <Link to="/reservations" className="mt-8 inline-flex rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-stone-900 transition hover:-translate-y-0.5 lg:mt-0">Reserve a table</Link>
@@ -166,4 +184,3 @@ export default function HomePage() {
     </>
   );
 }
-

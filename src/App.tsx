@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import MenuPage from "./pages/MenuPage";
 import ReservationsPage from "./pages/ReservationsPage";
 import ReviewsPage from "./pages/ReviewsPage";
+import TermsPage from "./pages/TermsPage";
 
 export default function App() {
   return (
@@ -21,8 +22,8 @@ export default function App() {
         <Route path="/experience" element={<ExperiencePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/terms" element={<TermsPage />} />
       </Route>
     </Routes>
   );
 }
-

@@ -4,6 +4,12 @@ import MotionBlock from "../components/common/MotionBlock";
 import SectionIntro from "../components/common/SectionIntro";
 import { siteMeta } from "../data/site";
 
+const bookingNotes = [
+  "Tables are held for 15 minutes unless our concierge team is notified.",
+  "Private dining and celebration requests are reviewed manually.",
+  "Dietary preferences and accessibility notes can be added in special requests.",
+];
+
 export default function ReservationsPage() {
   const [submitted, setSubmitted] = useState(false);
 
@@ -27,6 +33,11 @@ export default function ReservationsPage() {
                 <p key={hour}>{hour}</p>
               ))}
             </div>
+            <div className="mt-6 grid gap-3">
+              {bookingNotes.map((note) => (
+                <div key={note} className="rounded-[1.35rem] bg-stone-50 px-4 py-3 text-sm leading-7 text-stone-600">{note}</div>
+              ))}
+            </div>
           </div>
         </MotionBlock>
         <MotionBlock delay={0.08} className="rounded-[2.25rem] border border-white/70 bg-white/85 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.35)] sm:p-8">
@@ -44,6 +55,15 @@ export default function ReservationsPage() {
                 <option>Window seating</option>
                 <option>Private dining</option>
                 <option>Chef's counter</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-stone-700">Occasion</label>
+              <select className="form-input">
+                <option>Casual dining</option>
+                <option>Business dinner</option>
+                <option>Celebration</option>
+                <option>Anniversary</option>
               </select>
             </div>
             <div className="sm:col-span-2">
@@ -78,4 +98,3 @@ function Field({ label, type, placeholder }: FieldProps) {
     </div>
   );
 }
-
