@@ -13,7 +13,7 @@ const serviceMoments = [
 export default function HomePage() {
   return (
     <>
-      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:pb-24 lg:pt-12 xl:gap-16">
+      <section className="mx-auto grid max-w-[92rem] gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] xl:px-8 2xl:px-10 lg:pb-24 lg:pt-12 xl:gap-16">
         <MotionBlock className="flex flex-col justify-center">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-700/80">Luxury Dining Experience</p>
           <h1 className="mt-6 max-w-3xl font-serif text-5xl leading-[0.95] text-stone-900 sm:text-6xl lg:text-7xl">
@@ -65,7 +65,7 @@ export default function HomePage() {
         </MotionBlock>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <SectionIntro eyebrow="Featured Dishes" title="A menu presentation that feels editorial, rich, and beautifully commercial." description="Curated dish cards give restaurant owners a realistic preview of how premium food can be positioned online." />
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {featuredDishes.map((dish, index) => (
@@ -87,7 +87,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <div className="grid gap-10 rounded-[2.5rem] border border-white/70 bg-white/70 p-6 shadow-[0_24px_80px_rgba(221,210,192,0.4)] backdrop-blur lg:grid-cols-[0.9fr_1.1fr] lg:p-12">
           <MotionBlock>
             <SectionIntro eyebrow="About Maison Ember" title="Built around calm luxury, quality ingredients, and impeccable hospitality." description="This concept showcases how an agency-grade website can balance beautiful storytelling with strong booking-focused UX." />
@@ -104,7 +104,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <SectionIntro eyebrow="Testimonials" title="Social proof that feels polished, trustworthy, and conversion-ready." description="Premium review cards help potential guests and clients feel immediate confidence in the restaurant brand." />
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
@@ -126,7 +126,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <SectionIntro eyebrow="Experience" title="Immersive video moments to showcase ambiance, craft, and hospitality." description="Use these premium cards to present reels, kitchen footage, or private dining moments in a portfolio-ready way." />
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {videoItems.map((video, index) => (
@@ -148,7 +148,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <SectionIntro eyebrow="Gallery" title="A refined visual stream of cuisine, interiors, and private dining moments." description="The grid is designed to feel spacious and portfolio-worthy on desktop while staying clean and touch-friendly on mobile." />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {galleryImages.map((image, index) => (
@@ -159,7 +159,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <div className="rounded-[2.5rem] bg-stone-900 px-6 py-12 text-white lg:flex lg:items-center lg:justify-between lg:px-12">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-300/80">Reservation CTA</p>
@@ -170,7 +170,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 xl:px-8 2xl:px-10">
         <SectionIntro eyebrow="FAQ" title="Answer common questions without interrupting the premium feel of the site." description="A simple, elegant FAQ helps move visitors toward reservations, private dining, or contact inquiries." />
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {faqItems.map((faq, index) => (

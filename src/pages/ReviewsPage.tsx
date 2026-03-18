@@ -21,7 +21,7 @@ export default function ReviewsPage() {
   };
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
       <SectionIntro
         eyebrow="Reviews"
         title="Trust-building testimonials with a premium, editorial layout."

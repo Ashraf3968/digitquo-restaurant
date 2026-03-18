@@ -12,7 +12,7 @@ const contactDetails = [
 
 export default function ContactPage() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <MotionBlock>
           <SectionIntro eyebrow="Contact Us" title="A clean, premium contact page that keeps inquiries moving." description="This section combines clear contact details, a polished inquiry form, and a location preview to support both reservations and private event leads." />

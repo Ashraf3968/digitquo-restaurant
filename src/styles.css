@@ -24,6 +24,15 @@ body {
   min-height: 100vh;
 }
 
+body,
+button,
+a,
+input,
+select,
+textarea {
+  cursor: none;
+}
+
 .font-serif {
   font-family: Georgia, "Times New Roman", serif;
 }
@@ -49,9 +58,38 @@ img {
   display: block;
 }
 
+a,
+button,
+input,
+select,
+textarea {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+
+a:hover,
+button:hover {
+  will-change: transform;
+}
+
 @media (max-width: 640px) {
   body {
     overflow-x: hidden;
+  }
+}
+
+@media (pointer: coarse) {
+  body,
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    cursor: auto;
   }
 }
 

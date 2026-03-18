@@ -8,7 +8,7 @@ export default function ExperiencePage() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
       <SectionIntro eyebrow="Experience" title="Video and gallery storytelling designed to make the brand feel tangible." description="From private dining to chef presentation, this page gives restaurant prospects and agency clients a polished visual narrative." />
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
         {videoItems.map((video, index) => (

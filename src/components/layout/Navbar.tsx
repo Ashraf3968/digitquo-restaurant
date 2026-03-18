@@ -2,10 +2,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { navItems, siteMeta } from "../../data/site";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { isLoggedIn, user } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -15,8 +17,8 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 px-4 py-4 sm:px-6 lg:px-10">
-      <div className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/70 bg-white/80 px-5 py-3 shadow-[0_18px_55px_rgba(215,193,166,0.35)] backdrop-blur-xl transition-all duration-300 ${scrolled ? "py-2 shadow-[0_18px_60px_rgba(183,146,96,0.22)]" : ""}`}>
+    <header className="sticky top-0 z-50 px-4 py-4 sm:px-6 xl:px-8 2xl:px-10">
+      <div className={`mx-auto flex max-w-[92rem] items-center justify-between rounded-full border border-white/70 bg-white/80 px-5 py-3 shadow-[0_18px_55px_rgba(215,193,166,0.35)] backdrop-blur-xl transition-all duration-300 ${scrolled ? "py-2 shadow-[0_18px_60px_rgba(183,146,96,0.22)]" : ""}`}>
         <Link to="/" className="flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-full bg-stone-900 text-sm font-semibold tracking-[0.3em] text-white shadow-lg shadow-stone-900/15">
             {siteMeta.shortBrand}
@@ -45,7 +47,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <Link to="/login" className="rounded-full border border-stone-200 px-5 py-2 text-sm font-medium text-stone-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-stone-900">
-            Login
+            {isLoggedIn ? `Account · ${user?.name?.split(" ")[0] ?? "Member"}` : "Login"}
           </Link>
           <Link to="/reservations" className="rounded-full bg-stone-900 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-stone-900/10 transition hover:-translate-y-0.5 hover:bg-stone-800">
             Book a Table
@@ -73,7 +75,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -18 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto mt-3 max-w-7xl overflow-hidden rounded-[2rem] border border-white/60 bg-white/90 p-4 shadow-[0_24px_70px_rgba(215,193,166,0.35)] backdrop-blur-xl lg:hidden"
+            className="mx-auto mt-3 max-w-[92rem] overflow-hidden rounded-[2rem] border border-white/60 bg-white/90 p-4 shadow-[0_24px_70px_rgba(215,193,166,0.35)] backdrop-blur-xl lg:hidden"
           >
             <div className="grid gap-2">
               {navItems.map((item) => (
@@ -88,7 +90,7 @@ export default function Navbar() {
               ))}
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 <Link to="/login" onClick={() => setOpen(false)} className="rounded-2xl border border-stone-200 px-4 py-3 text-center text-sm font-medium text-stone-700">
-                  Login
+                  {isLoggedIn ? "Account" : "Login"}
                 </Link>
                 <Link to="/reservations" onClick={() => setOpen(false)} className="rounded-2xl bg-stone-900 px-4 py-3 text-center text-sm font-semibold text-white">
                   Book a Table

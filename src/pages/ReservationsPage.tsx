@@ -20,7 +20,7 @@ export default function ReservationsPage() {
   };
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <MotionBlock>
           <SectionIntro eyebrow="Reservations" title="A polished booking experience designed to convert with confidence." description="This reservation interface is built like a premium hospitality product: clear, elegant, and effortless to complete on any device." />
