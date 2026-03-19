@@ -127,19 +127,24 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <SectionIntro eyebrow="Experience" title="Immersive video moments to showcase ambiance, craft, and hospitality." description="Use these premium cards to present reels, kitchen footage, or private dining moments in a portfolio-ready way." />
+        <SectionIntro eyebrow="Experience" title="Immersive restaurant reels that make the brand feel alive online." description="The homepage now uses real food and restaurant videos so the portfolio demo feels richer, more cinematic, and more convincing for clients." />
         <div className="mt-10 grid gap-6 lg:grid-cols-3">
           {videoItems.map((video, index) => (
             <MotionBlock key={video.title} delay={index * 0.08} className="group overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-[0_18px_55px_rgba(221,210,192,0.32)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_68px_rgba(210,184,150,0.35)]">
-              <div className="relative">
-                <img src={video.image} alt={video.title} className="h-72 w-full object-cover transition duration-500 group-hover:scale-105" />
+              <div className="relative h-72 overflow-hidden">
+                <video src={video.videoUrl} poster={video.image} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" autoPlay muted loop playsInline preload="metadata" />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-900/65 to-transparent" />
+                <div className="absolute left-5 top-5 rounded-full bg-white/88 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-900 shadow-lg">
+                  {video.tag}
+                </div>
                 <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-white">
                   <div>
                     <p className="font-semibold">{video.title}</p>
                     <p className="text-sm text-white/80">{video.duration}</p>
                   </div>
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-white/20">Play</div>
+                  <Link to="/experience" className="grid h-12 w-12 place-items-center rounded-full bg-white/20 text-sm font-semibold transition duration-300 hover:scale-105">
+                    Play
+                  </Link>
                 </div>
               </div>
               <div className="p-6 text-sm leading-7 text-stone-600">{video.description}</div>

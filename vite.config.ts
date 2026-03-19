@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { handleApiRequest } from "./server/api.mjs";
 
 export default defineConfig({
+  base: "./",
   plugins: [
     react(),
     tailwindcss(),

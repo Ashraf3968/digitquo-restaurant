@@ -4,6 +4,14 @@ import { resolve, dirname } from "node:path";
 const DB_PATH = resolve(process.cwd(), "server", "data", "app-db.json");
 
 const initialData = {
+  users: [
+    {
+      id: "user-seed-1",
+      name: "Demo Member",
+      email: "member@maisonember.com",
+      password: "member123"
+    }
+  ],
   reservations: [],
   reviews: [
     {
@@ -45,7 +53,12 @@ function ensureDb() {
 
 function readDb() {
   ensureDb();
-  return JSON.parse(readFileSync(DB_PATH, "utf8"));
+  const data = JSON.parse(readFileSync(DB_PATH, "utf8"));
+  if (!Array.isArray(data.users)) {
+    data.users = [...initialData.users];
+    writeDb(data);
+  }
+  return data;
 }
 
 function writeDb(data) {
@@ -55,6 +68,36 @@ function writeDb(data) {
 
 function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function createUser(payload) {
+  const data = readDb();
+  const email = payload.email.trim().toLowerCase();
+  const existingUser = data.users.find((item) => item.email.toLowerCase() === email);
+  if (existingUser) {
+    throw new Error("An account with this email already exists.");
+  }
+
+  const user = {
+    id: createId("user"),
+    name: payload.name.trim(),
+    email,
+    password: payload.password,
+  };
+
+  data.users.unshift(user);
+  writeDb(data);
+  return { id: user.id, name: user.name, email: user.email };
+}
+
+export function authenticateUser(payload) {
+  const data = readDb();
+  const email = payload.email.trim().toLowerCase();
+  const user = data.users.find((item) => item.email.toLowerCase() === email && item.password === payload.password);
+  if (!user) {
+    throw new Error("No registered account matched those login details.");
+  }
+  return { id: user.id, name: user.name, email: user.email };
 }
 
 export function listReviews() {

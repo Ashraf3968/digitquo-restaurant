@@ -1,9 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-
-type User = {
-  name: string;
-  email: string;
-};
+import { loginUser, signupUser, type AuthUser } from "../lib/api";
 
 type LoginPayload = {
   email: string;
@@ -17,39 +13,42 @@ type SignupPayload = {
   confirmPassword: string;
 };
 
+type AuthResult = {
+  ok: boolean;
+  message?: string;
+};
+
 type AuthContextValue = {
-  user: User | null;
+  user: AuthUser | null;
   isLoggedIn: boolean;
-  login: (payload: LoginPayload) => { ok: boolean; message?: string };
-  signup: (payload: SignupPayload) => { ok: boolean; message?: string };
+  login: (payload: LoginPayload) => Promise<AuthResult>;
+  signup: (payload: SignupPayload) => Promise<AuthResult>;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isLoggedIn: Boolean(user),
-      login: ({ email, password }) => {
+      login: async ({ email, password }) => {
         if (!email || !password) {
           return { ok: false, message: "Please enter both email and password." };
         }
 
-        const fallbackName = email.split("@")[0].replace(/[._-]/g, " ");
-        const name = fallbackName
-          .split(" ")
-          .filter(Boolean)
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(" ");
-
-        setUser({ email, name: name || "Guest Member" });
-        return { ok: true };
+        try {
+          const nextUser = await loginUser({ email, password });
+          setUser(nextUser);
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, message: error instanceof Error ? error.message : "Login failed." };
+        }
       },
-      signup: ({ name, email, password, confirmPassword }) => {
+      signup: async ({ name, email, password, confirmPassword }) => {
         if (!name || !email || !password || !confirmPassword) {
           return { ok: false, message: "Please complete all fields to create your account." };
         }
@@ -62,8 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, message: "Password and confirm password must match." };
         }
 
-        setUser({ name, email });
-        return { ok: true };
+        try {
+          const nextUser = await signupUser({ name, email, password });
+          setUser(nextUser);
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, message: error instanceof Error ? error.message : "Signup failed." };
+        }
       },
       logout: () => setUser(null),
     }),

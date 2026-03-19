@@ -8,31 +8,36 @@ export default function LoginPage() {
   const { isLoggedIn, login, logout, signup, user } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const result = login({
+    setSubmitting(true);
+    const result = await login({
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
     });
 
+    setSubmitting(false);
     setMessage(result.ok ? "Welcome back. Your member account is now active." : result.message ?? "");
     if (result.ok) {
       event.currentTarget.reset();
     }
   };
 
-  const handleSignup = (event: FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const result = signup({
+    setSubmitting(true);
+    const result = await signup({
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
       confirmPassword: String(formData.get("confirmPassword") ?? ""),
     });
 
+    setSubmitting(false);
     setMessage(result.ok ? "Account created successfully. You are now logged in." : result.message ?? "");
     if (result.ok) {
       event.currentTarget.reset();
@@ -46,11 +51,11 @@ export default function LoginPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-700/80">Member Access</p>
             <h1 className="mt-6 font-serif text-5xl leading-tight text-stone-900">A premium login experience for reservations and guest perks.</h1>
-            <p className="mt-6 max-w-lg text-base leading-8 text-stone-600">Designed with the same refined visual language as the restaurant brand to feel credible, calm, and portfolio-worthy.</p>
+            <p className="mt-6 max-w-lg text-base leading-8 text-stone-600">Accounts are now stored in the local project database, so only registered users can sign in.</p>
           </div>
           <div className="rounded-[2rem] bg-white/80 p-6">
             <p className="font-semibold text-stone-900">{siteMeta.brand}</p>
-            <p className="mt-2 text-sm leading-7 text-stone-600">Private dining requests, saved reservations, member updates, and concierge-level communication in one elegant guest hub.</p>
+            <p className="mt-2 text-sm leading-7 text-stone-600">Create an account once, then use the same credentials to submit reservations and public reviews through the local app server.</p>
           </div>
         </MotionBlock>
         <MotionBlock delay={0.08} className="mx-auto flex w-full max-w-xl flex-col justify-center rounded-[2.5rem] border border-white/70 bg-white/85 p-8 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-10">
@@ -60,7 +65,7 @@ export default function LoginPage() {
             <p className="mt-3 text-sm leading-7 text-stone-600">
               {isLoggedIn
                 ? "Manage reservations, private dining requests, and member preferences from one premium dashboard."
-                : "Sign in or create an account to manage reservations, event requests, and member updates."}
+                : "Sign in with an existing account or create one to manage reservations, event requests, and member updates."}
             </p>
           </div>
 
@@ -129,7 +134,7 @@ export default function LoginPage() {
                     <label className="flex items-center gap-2"><input type="checkbox" className="rounded border-stone-300" /> Remember me</label>
                     <button type="button" className="font-medium text-stone-800">Forgot password?</button>
                   </div>
-                  <button type="submit" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">Login</button>
+                  <button type="submit" disabled={submitting} className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70">{submitting ? "Checking..." : "Login"}</button>
                   <p className="text-center text-sm text-stone-500">New here? <button type="button" onClick={() => setMode("signup")} className="font-semibold text-stone-900">Create account</button></p>
                 </form>
               ) : (
@@ -150,7 +155,7 @@ export default function LoginPage() {
                     <label className="mb-2 block text-sm font-medium text-stone-700">Confirm Password</label>
                     <input className="form-input" name="confirmPassword" type="password" placeholder="Confirm password" />
                   </div>
-                  <button type="submit" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">Create account</button>
+                  <button type="submit" disabled={submitting} className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70">{submitting ? "Creating..." : "Create account"}</button>
                   <p className="text-center text-sm text-stone-500">Already a member? <button type="button" onClick={() => setMode("login")} className="font-semibold text-stone-900">Login</button></p>
                 </form>
               )}
@@ -167,4 +172,3 @@ export default function LoginPage() {
     </section>
   );
 }
-

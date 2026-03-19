@@ -23,6 +23,12 @@ export type ReservationItem = {
   createdAt: string;
 };
 
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     headers: {
@@ -33,11 +39,41 @@ async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T
   });
 
   if (!response.ok) {
+    const contentType = response.headers.get("content-type") ?? "";
     const text = await response.text();
+
+    if (contentType.includes("application/json")) {
+      let parsedMessage = "";
+      try {
+        parsedMessage = (JSON.parse(text) as { message?: string }).message ?? "";
+      } catch {
+        parsedMessage = "";
+      }
+      throw new Error(parsedMessage || text || "Request failed.");
+    }
+
+    if (response.status === 404) {
+      throw new Error("The local app server API was not found. Run the site with npm run dev or npm run start.");
+    }
+
     throw new Error(text || "Request failed.");
   }
 
   return response.json() as Promise<T>;
+}
+
+export function loginUser(payload: { email: string; password: string }) {
+  return requestJson<AuthUser>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function signupUser(payload: { name: string; email: string; password: string }) {
+  return requestJson<AuthUser>("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function getReviews() {

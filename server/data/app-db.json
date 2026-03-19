@@ -1,4 +1,12 @@
 {
+  "users": [
+    {
+      "id": "user-seed-1",
+      "name": "Demo Member",
+      "email": "member@maisonember.com",
+      "password": "member123"
+    }
+  ],
   "reservations": [],
   "reviews": [
     {

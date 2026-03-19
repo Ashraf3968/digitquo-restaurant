@@ -1,4 +1,4 @@
-import { addReservation, addReview, getDashboard, listReviews, removeReview, updateReservation } from "./db.mjs";
+import { addReservation, addReview, authenticateUser, createUser, getDashboard, listReviews, removeReview, updateReservation } from "./db.mjs";
 
 function sendJson(res, status, payload) {
   res.statusCode = status;
@@ -30,6 +30,36 @@ export async function handleApiRequest(req, res) {
   }
 
   try {
+    if (pathname === "/api/auth/signup" && req.method === "POST") {
+      const body = await readBody(req);
+      if (!body.name || !body.email || !body.password) {
+        sendJson(res, 400, { message: "Name, email, and password are required to create an account." });
+        return true;
+      }
+
+      try {
+        sendJson(res, 201, createUser(body));
+      } catch (error) {
+        sendJson(res, 409, { message: error instanceof Error ? error.message : "Could not create account." });
+      }
+      return true;
+    }
+
+    if (pathname === "/api/auth/login" && req.method === "POST") {
+      const body = await readBody(req);
+      if (!body.email || !body.password) {
+        sendJson(res, 400, { message: "Email and password are required to login." });
+        return true;
+      }
+
+      try {
+        sendJson(res, 200, authenticateUser(body));
+      } catch (error) {
+        sendJson(res, 401, { message: error instanceof Error ? error.message : "Login failed." });
+      }
+      return true;
+    }
+
     if (pathname === "/api/reviews" && req.method === "GET") {
       sendJson(res, 200, listReviews());
       return true;

@@ -1,7 +1,7 @@
 export type NavItem = { label: string; to: string };
 export type Dish = { name: string; description: string; price: string; tag: string; image: string; category: string };
 export type Testimonial = { name: string; role: string; rating: number; quote: string; avatar: string };
-export type VideoItem = { title: string; description: string; image: string; duration: string };
+export type VideoItem = { title: string; description: string; image: string; duration: string; videoUrl: string; tag: string };
 
 export const siteMeta = {
   brand: "Maison Ember",
@@ -163,22 +163,28 @@ export const galleryImages = [
 
 export const videoItems: VideoItem[] = [
   {
-    title: "A Night at Maison Ember",
-    description: "A warm introduction to the dining room, lighting, and evening mood.",
-    image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80",
-    duration: "01:28",
-  },
-  {
     title: "Chef's Signature Pass",
-    description: "See our tasting dishes finished in the open kitchen.",
+    description: "Slow cinematic plating footage to showcase fire-led dishes, finishing touches, and the premium kitchen rhythm.",
     image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1200&q=80",
-    duration: "00:54",
+    duration: "00:29",
+    tag: "Kitchen Reel",
+    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-chef-putting-herbs-on-a-meal-43165-large.mp4",
   },
   {
-    title: "Private Dining Evenings",
-    description: "Premium events, curated tablescapes, and intimate celebrations.",
-    image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80",
-    duration: "01:12",
+    title: "Dining Room Atmosphere",
+    description: "Warm service, table styling, and elegant movement through a polished, light-filled hospitality space.",
+    image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80",
+    duration: "00:24",
+    tag: "Ambiance",
+    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-serving-dish-in-a-fancy-restaurant-34431-large.mp4",
+  },
+  {
+    title: "Dessert Finish Moment",
+    description: "A premium dessert-focused reel that adds appetite appeal and helps the site feel more like a real campaign project.",
+    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=80",
+    duration: "00:18",
+    tag: "Chef Detail",
+    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-pouring-chocolate-on-dessert-21886-large.mp4",
   },
 ];
 
@@ -190,4 +196,3 @@ export const faqItems = [
   { question: "Is parking available?", answer: "Yes. Valet and nearby secure parking are available during dinner service." },
   { question: "Can I order takeaway?", answer: "Selected signature dishes and desserts are available for pickup during lunch and dinner service." },
 ];
-
