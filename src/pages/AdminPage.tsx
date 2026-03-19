@@ -2,7 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import MotionBlock from "../components/common/MotionBlock";
 import SectionIntro from "../components/common/SectionIntro";
-import { deleteReview, getAdminDashboard, updateReservationStatus, type AdminUser, type ReservationItem, type ReviewItem } from "../lib/api";
+import {
+  deleteReview,
+  deleteUser,
+  getAdminDashboard,
+  updateReservationStatus,
+  updateUserStatus,
+  type AdminUser,
+  type ReservationItem,
+  type ReviewItem,
+} from "../lib/api";
 
 const ADMIN_EMAIL = "adminaccess@digitquo.com";
 const ADMIN_PASSWORD = "giveadminaccess@digitquo";
@@ -15,6 +24,7 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userQuery, setUserQuery] = useState("");
   const [reservations, setReservations] = useState<ReservationItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -53,9 +63,19 @@ export default function AdminPage() {
       pending: reservations.filter((item) => item.status === "Pending").length,
       reviews: reviews.length,
       users: users.length,
+      suspended: users.filter((item) => item.status === "Suspended").length,
+      activeUsers: users.filter((item) => item.status === "Active").length,
     }),
     [reservations, reviews, users]
   );
+
+  const filteredUsers = useMemo(() => {
+    const query = userQuery.trim().toLowerCase();
+    if (!query) {
+      return users;
+    }
+    return users.filter((user) => user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query) || user.id.toLowerCase().includes(query));
+  }, [users, userQuery]);
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -84,6 +104,17 @@ export default function AdminPage() {
   const handleDeleteReview = async (id: string) => {
     await deleteReview(id);
     setReviews((current) => current.filter((item) => item.id !== id));
+  };
+
+  const handleUserStatusToggle = async (user: AdminUser) => {
+    const nextStatus = user.status === "Active" ? "Suspended" : "Active";
+    const updated = await updateUserStatus(user.id, nextStatus);
+    setUsers((current) => current.map((item) => (item.id === user.id ? updated : item)));
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUser(userId);
+    setUsers((current) => current.filter((item) => item.id !== userId));
   };
 
   if (!authorized) {
@@ -123,17 +154,24 @@ export default function AdminPage() {
         <button type="button" onClick={handleLogout} className="rounded-full border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-amber-300 hover:bg-amber-50">Logout</button>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-4">
-        <StatCard label="Total reservations" value={String(totals.reservations)} />
-        <StatCard label="Pending reservations" value={String(totals.pending)} />
-        <StatCard label="Saved reviews" value={String(totals.reviews)} />
-        <StatCard label="Registered users" value={String(totals.users)} />
+      <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <StatCard label="Reservations" value={String(totals.reservations)} />
+        <StatCard label="Pending" value={String(totals.pending)} />
+        <StatCard label="Reviews" value={String(totals.reviews)} />
+        <StatCard label="Users" value={String(totals.users)} />
+        <StatCard label="Active Users" value={String(totals.activeUsers)} />
+        <StatCard label="Suspended" value={String(totals.suspended)} />
       </div>
 
       <div className="mt-10 grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
         <MotionBlock className="rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-          <h2 className="text-2xl font-semibold text-stone-900">Reservations</h2>
-          <p className="mt-2 text-sm leading-7 text-stone-600">Update status for every booking request submitted through the public reservation form.</p>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold text-stone-900">Reservations</h2>
+              <p className="mt-2 text-sm leading-7 text-stone-600">Update status for every booking request submitted through the public reservation form.</p>
+            </div>
+            <div className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">Priority queue: {totals.pending}</div>
+          </div>
           <div className="mt-6 grid gap-4">
             {loading ? <p className="text-sm text-stone-500">Loading reservations...</p> : null}
             {!loading && reservations.length === 0 ? <p className="text-sm text-stone-500">No reservations have been submitted yet.</p> : null}
@@ -161,7 +199,7 @@ export default function AdminPage() {
 
         <MotionBlock className="rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
           <h2 className="text-2xl font-semibold text-stone-900">Reviews</h2>
-          <p className="mt-2 text-sm leading-7 text-stone-600">All public reviews submitted through the live site appear here and can be removed instantly.</p>
+          <p className="mt-2 text-sm leading-7 text-stone-600">Moderate public reviews submitted through the live site.</p>
           <div className="mt-6 grid gap-4">
             {loading ? <p className="text-sm text-stone-500">Loading reviews...</p> : null}
             {!loading && reviews.length === 0 ? <p className="text-sm text-stone-500">No reviews have been submitted yet.</p> : null}
@@ -182,30 +220,59 @@ export default function AdminPage() {
       </div>
 
       <MotionBlock className="mt-8 rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-        <h2 className="text-2xl font-semibold text-stone-900">Users</h2>
-        <p className="mt-2 text-sm leading-7 text-stone-600">Registered accounts saved in the local project data. Passwords are visible here because this is a showcase-only admin panel.</p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-stone-900">Users</h2>
+            <p className="mt-2 text-sm leading-7 text-stone-600">Suspend, reactivate, search, and remove accounts from one place.</p>
+          </div>
+          <div className="w-full max-w-sm">
+            <input className="form-input" value={userQuery} onChange={(event) => setUserQuery(event.target.value)} placeholder="Search by name, email, or user ID" />
+          </div>
+        </div>
+
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm text-stone-700">
             <thead>
               <tr className="text-xs uppercase tracking-[0.2em] text-stone-500">
-                <th className="px-4">Name</th>
-                <th className="px-4">Email</th>
+                <th className="px-4">User</th>
+                <th className="px-4">Status</th>
                 <th className="px-4">Password</th>
-                <th className="px-4">User ID</th>
+                <th className="px-4">Created</th>
+                <th className="px-4">Last Login</th>
+                <th className="px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td className="px-4 py-3 text-stone-500" colSpan={4}>Loading users...</td></tr>
-              ) : users.length === 0 ? (
-                <tr><td className="px-4 py-3 text-stone-500" colSpan={4}>No users found.</td></tr>
+                <tr><td className="px-4 py-3 text-stone-500" colSpan={6}>Loading users...</td></tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr><td className="px-4 py-3 text-stone-500" colSpan={6}>No matching users found.</td></tr>
               ) : (
-                users.map((account) => (
+                filteredUsers.map((account) => (
                   <tr key={account.id} className="rounded-2xl bg-stone-50">
-                    <td className="rounded-l-2xl px-4 py-4 font-semibold text-stone-900">{account.name}</td>
-                    <td className="px-4 py-4">{account.email}</td>
-                    <td className="px-4 py-4">{account.password}</td>
-                    <td className="rounded-r-2xl px-4 py-4 text-stone-500">{account.id}</td>
+                    <td className="rounded-l-2xl px-4 py-4 align-top">
+                      <p className="font-semibold text-stone-900">{account.name}</p>
+                      <p className="mt-1 text-stone-600">{account.email}</p>
+                      <p className="mt-1 text-xs text-stone-400">{account.id}</p>
+                    </td>
+                    <td className="px-4 py-4 align-top">
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${account.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
+                        {account.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 align-top">{account.password}</td>
+                    <td className="px-4 py-4 align-top text-stone-600">{formatDate(account.createdAt)}</td>
+                    <td className="px-4 py-4 align-top text-stone-600">{account.lastLoginAt ? formatDate(account.lastLoginAt) : "Never"}</td>
+                    <td className="rounded-r-2xl px-4 py-4 align-top">
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => void handleUserStatusToggle(account)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${account.status === "Active" ? "border border-amber-200 text-amber-800 hover:bg-amber-50" : "border border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}>
+                          {account.status === "Active" ? "Suspend" : "Reactivate"}
+                        </button>
+                        <button type="button" onClick={() => void handleDeleteUser(account.id)} className="rounded-full border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -224,4 +291,18 @@ function StatCard({ label, value }: { label: string; value: string }) {
       <p className="mt-3 text-3xl font-semibold text-stone-900">{value}</p>
     </div>
   );
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

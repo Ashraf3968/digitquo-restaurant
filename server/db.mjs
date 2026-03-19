@@ -9,7 +9,10 @@ const initialData = {
       id: "user-seed-1",
       name: "Demo Member",
       email: "member@maisonember.com",
-      password: "member123"
+      password: "member123",
+      status: "Active",
+      createdAt: "2026-03-10T10:00:00.000Z",
+      lastLoginAt: null,
     }
   ],
   reservations: [],
@@ -58,6 +61,12 @@ function readDb() {
     data.users = [...initialData.users];
     writeDb(data);
   }
+  data.users = data.users.map((user) => ({
+    status: "Active",
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null,
+    ...user,
+  }));
   return data;
 }
 
@@ -83,6 +92,9 @@ export function createUser(payload) {
     name: payload.name.trim(),
     email,
     password: payload.password,
+    status: "Active",
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null,
   };
 
   data.users.unshift(user);
@@ -97,12 +109,34 @@ export function authenticateUser(payload) {
   if (!user) {
     throw new Error("No registered account matched those login details.");
   }
+  if (user.status === "Suspended") {
+    throw new Error("This account has been suspended. Contact the administrator.");
+  }
+  user.lastLoginAt = new Date().toISOString();
+  writeDb(data);
   return { id: user.id, name: user.name, email: user.email };
 }
 
 export function listUsers() {
   const data = readDb();
   return data.users;
+}
+
+export function updateUserStatus(id, status) {
+  const data = readDb();
+  const user = data.users.find((item) => item.id === id);
+  if (!user) {
+    return null;
+  }
+  user.status = status;
+  writeDb(data);
+  return user;
+}
+
+export function removeUser(id) {
+  const data = readDb();
+  data.users = data.users.filter((item) => item.id !== id);
+  writeDb(data);
 }
 
 export function listReviews() {

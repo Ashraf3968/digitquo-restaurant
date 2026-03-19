@@ -1,4 +1,4 @@
-import { addReservation, addReview, authenticateUser, createUser, getDashboard, listReviews, removeReview, updateReservation } from "./db.mjs";
+import { addReservation, addReview, authenticateUser, createUser, getDashboard, listReviews, removeReview, removeUser, updateReservation, updateUserStatus } from "./db.mjs";
 
 function sendJson(res, status, payload) {
   res.statusCode = status;
@@ -99,6 +99,25 @@ export async function handleApiRequest(req, res) {
         return true;
       }
       sendJson(res, 200, updated);
+      return true;
+    }
+
+    if (pathname.startsWith("/api/admin/users/") && pathname.endsWith("/status") && req.method === "PATCH") {
+      const id = pathname.split("/")[4];
+      const body = await readBody(req);
+      const updated = updateUserStatus(id, body.status);
+      if (!updated) {
+        notFound(res);
+        return true;
+      }
+      sendJson(res, 200, updated);
+      return true;
+    }
+
+    if (pathname.startsWith("/api/admin/users/") && req.method === "DELETE") {
+      const id = pathname.split("/").pop();
+      removeUser(id);
+      sendJson(res, 200, { ok: true });
       return true;
     }
 

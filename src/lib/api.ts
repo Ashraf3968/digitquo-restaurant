@@ -31,6 +31,9 @@ export type AuthUser = {
 
 export type AdminUser = AuthUser & {
   password: string;
+  status: "Active" | "Suspended";
+  createdAt: string;
+  lastLoginAt: string | null;
 };
 
 type DemoDb = {
@@ -78,6 +81,9 @@ const initialDb: DemoDb = {
       name: "Demo Member",
       email: "member@maisonember.com",
       password: "member123",
+      status: "Active",
+      createdAt: "2026-03-10T10:00:00.000Z",
+      lastLoginAt: null,
     },
   ],
   reviews: seededReviews,
@@ -90,6 +96,25 @@ function isBrowser() {
 
 function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeUsers(users: unknown): AdminUser[] {
+  if (!Array.isArray(users)) {
+    return structuredClone(initialDb.users);
+  }
+
+  return users.map((item) => {
+    const user = item as Partial<AdminUser>;
+    return {
+      id: String(user.id ?? createId("user")),
+      name: String(user.name ?? "Member"),
+      email: String(user.email ?? ""),
+      password: String(user.password ?? "member123"),
+      status: user.status === "Suspended" ? "Suspended" : "Active",
+      createdAt: String(user.createdAt ?? new Date().toISOString()),
+      lastLoginAt: user.lastLoginAt ? String(user.lastLoginAt) : null,
+    };
+  });
 }
 
 function readLocalDb(): DemoDb {
@@ -106,7 +131,7 @@ function readLocalDb(): DemoDb {
   try {
     const parsed = JSON.parse(raw) as Partial<DemoDb>;
     const db: DemoDb = {
-      users: Array.isArray(parsed.users) ? parsed.users : structuredClone(initialDb.users),
+      users: normalizeUsers(parsed.users),
       reviews: Array.isArray(parsed.reviews) && parsed.reviews.length > 0 ? parsed.reviews : structuredClone(initialDb.reviews),
       reservations: Array.isArray(parsed.reservations) ? parsed.reservations : [],
     };
@@ -193,6 +218,11 @@ export async function loginUser(payload: { email: string; password: string }) {
     if (!user) {
       throw new Error("No registered account matched those login details.");
     }
+    if (user.status === "Suspended") {
+      throw new Error("This account has been suspended. Contact the administrator.");
+    }
+    user.lastLoginAt = new Date().toISOString();
+    writeLocalDb(db);
     return toAuthUser(user);
   }
 }
@@ -220,6 +250,9 @@ export async function signupUser(payload: { name: string; email: string; passwor
       name: payload.name.trim(),
       email,
       password: payload.password,
+      status: "Active",
+      createdAt: new Date().toISOString(),
+      lastLoginAt: null,
     };
     db.users.unshift(user);
     writeLocalDb(db);
@@ -335,6 +368,45 @@ export async function updateReservationStatus(id: string, status: string) {
     reservation.status = status;
     writeLocalDb(db);
     return reservation;
+  }
+}
+
+export async function updateUserStatus(id: string, status: AdminUser["status"]) {
+  try {
+    return await requestJson<AdminUser>(`/api/admin/users/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    const user = db.users.find((item) => item.id === id);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    user.status = status;
+    writeLocalDb(db);
+    return user;
+  }
+}
+
+export async function deleteUser(id: string) {
+  try {
+    return await requestJson<{ ok: true }>(`/api/admin/users/${id}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    db.users = db.users.filter((item) => item.id !== id);
+    writeLocalDb(db);
+    return { ok: true as const };
   }
 }
 
