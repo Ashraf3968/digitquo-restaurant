@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 type User = {
   name: string;
@@ -32,37 +25,10 @@ type AuthContextValue = {
   logout: () => void;
 };
 
-const storageKey = "maison-ember-account";
-
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) {
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as User;
-      if (parsed?.email) {
-        setUser(parsed);
-      }
-    } catch {
-      window.localStorage.removeItem(storageKey);
-    }
-  }, []);
-
-  const persist = (nextUser: User | null) => {
-    setUser(nextUser);
-    if (nextUser) {
-      window.localStorage.setItem(storageKey, JSON.stringify(nextUser));
-      return;
-    }
-    window.localStorage.removeItem(storageKey);
-  };
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -80,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join(" ");
 
-        persist({ email, name: name || "Guest Member" });
+        setUser({ email, name: name || "Guest Member" });
         return { ok: true };
       },
       signup: ({ name, email, password, confirmPassword }) => {
@@ -96,10 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, message: "Password and confirm password must match." };
         }
 
-        persist({ name, email });
+        setUser({ name, email });
         return { ok: true };
       },
-      logout: () => persist(null),
+      logout: () => setUser(null),
     }),
     [user]
   );

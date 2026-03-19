@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <div className="grid min-h-[70vh] gap-8 lg:grid-cols-[1fr_0.95fr] xl:gap-12">
         <MotionBlock className="hidden rounded-[2.5rem] bg-[linear-gradient(160deg,_rgba(255,255,255,0.7),_rgba(245,238,228,0.92))] p-10 shadow-[0_28px_80px_rgba(221,210,192,0.36)] lg:flex lg:flex-col lg:justify-between">
           <div>

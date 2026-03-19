@@ -1,8 +1,10 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import MotionBlock from "../components/common/MotionBlock";
 import SectionIntro from "../components/common/SectionIntro";
 import StarRating from "../components/common/StarRating";
+import { useAuth } from "../context/AuthContext";
 import { testimonials } from "../data/site";
 
 const reviewHighlights = [
@@ -12,16 +14,26 @@ const reviewHighlights = [
 ];
 
 export default function ReviewsPage() {
+  const { isLoggedIn } = useAuth();
   const [submitted, setSubmitted] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!isLoggedIn) {
+      setSubmitted(false);
+      setMessage("Please login first before leaving a review.");
+      return;
+    }
+
     setSubmitted(true);
+    setMessage("");
     event.currentTarget.reset();
   };
 
   return (
-    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <SectionIntro
         eyebrow="Reviews"
         title="Trust-building testimonials with a premium, editorial layout."
@@ -55,7 +67,7 @@ export default function ReviewsPage() {
               <div className="grid h-14 w-14 place-items-center rounded-full bg-stone-900 text-sm font-semibold text-white">{testimonial.avatar}</div>
               <div>
                 <p className="font-semibold text-stone-900">{testimonial.name}</p>
-                <p className="text-sm text-stone-500">Verified guest · {testimonial.role}</p>
+                <p className="text-sm text-stone-500">Verified guest | {testimonial.role}</p>
               </div>
             </div>
             <StarRating rating={testimonial.rating} className="mt-5" />
@@ -70,7 +82,16 @@ export default function ReviewsPage() {
           title="Invite guests to share polished, trust-building feedback."
           description="A professional review form improves credibility and adds a realistic conversion layer to the demo."
         />
-        <form className="mt-8 grid gap-5 sm:grid-cols-2" onSubmit={handleSubmit}>
+        {!isLoggedIn ? (
+          <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-800">
+            Please login first to submit a review.
+            {" "}
+            <Link to="/login" className="font-semibold text-stone-900 underline-offset-4 hover:underline">
+              Open login
+            </Link>
+          </div>
+        ) : null}
+        <form className="mt-8" onSubmit={handleSubmit}><fieldset disabled={!isLoggedIn} className="grid gap-5 disabled:cursor-not-allowed disabled:opacity-60 sm:grid-cols-2">
           <div>
             <label className="mb-2 block text-sm font-medium text-stone-700">Name</label>
             <input className="form-input" placeholder="Guest name" />
@@ -91,7 +112,8 @@ export default function ReviewsPage() {
             <button type="submit" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">Submit review</button>
             <p className="text-sm text-stone-500">Reviews are moderated before appearing publicly in this portfolio demo.</p>
           </div>
-        </form>
+        </fieldset></form>
+        {message ? <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{message}</div> : null}
         {submitted ? <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">Review submitted successfully for the demo experience.</div> : null}
       </MotionBlock>
     </section>

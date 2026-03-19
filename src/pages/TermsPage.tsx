@@ -22,7 +22,7 @@ const sections = [
 
 export default function TermsPage() {
   return (
-    <section className="mx-auto max-w-[82rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[82rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <SectionIntro
         eyebrow="Terms and Conditions"
         title="Clear hospitality terms presented in a polished, brand-appropriate format."

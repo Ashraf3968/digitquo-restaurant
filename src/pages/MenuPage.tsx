@@ -13,7 +13,7 @@ export default function MenuPage() {
   );
 
   return (
-    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <SectionIntro eyebrow="Menu" title="A high-end menu layout designed to feel clear, appetizing, and premium." description="Categories, tags, and elegant dish cards make the menu easy to scan while preserving an upscale brand feel." />
       <div className="mt-10 flex flex-wrap gap-3">
         {categories.map((category) => (
@@ -50,4 +50,5 @@ export default function MenuPage() {
     </section>
   );
 }
+
 

@@ -4,7 +4,7 @@ import { navItems, siteMeta } from "../../data/site";
 export default function Footer() {
   return (
     <footer className="mt-24 border-t border-stone-200 bg-white/80">
-      <div className="mx-auto grid max-w-[92rem] gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] xl:px-8 2xl:px-10">
+      <div className="mx-auto grid max-w-[118rem] gap-12 px-3 py-16 sm:px-5 lg:grid-cols-[1.2fr_0.8fr_0.8fr_1fr] xl:px-6 2xl:px-8">
         <div>
           <div className="font-serif text-2xl text-stone-900">{siteMeta.brand}</div>
           <p className="mt-4 max-w-sm text-sm leading-7 text-stone-600">
@@ -57,3 +57,4 @@ export default function Footer() {
     </footer>
   );
 }
+

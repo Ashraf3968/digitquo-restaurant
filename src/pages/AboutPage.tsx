@@ -16,7 +16,7 @@ const pillars = [
 
 export default function AboutPage() {
   return (
-    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <SectionIntro eyebrow="About Us" title="A bright, elevated restaurant concept shaped by detail and hospitality." description="This page balances trust-building storytelling, chef identity, ingredient quality, and a premium hospitality atmosphere." />
 
       <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
@@ -52,3 +52,4 @@ export default function AboutPage() {
     </section>
   );
 }
+

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import MotionBlock from "../components/common/MotionBlock";
 import SectionIntro from "../components/common/SectionIntro";
+import { useAuth } from "../context/AuthContext";
 import { siteMeta } from "../data/site";
 
 const bookingNotes = [
@@ -11,16 +13,26 @@ const bookingNotes = [
 ];
 
 export default function ReservationsPage() {
+  const { isLoggedIn } = useAuth();
   const [submitted, setSubmitted] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!isLoggedIn) {
+      setSubmitted(false);
+      setMessage("Please login first to submit a reservation request.");
+      return;
+    }
+
     setSubmitted(true);
+    setMessage("");
     event.currentTarget.reset();
   };
 
   return (
-    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <MotionBlock>
           <SectionIntro eyebrow="Reservations" title="A polished booking experience designed to convert with confidence." description="This reservation interface is built like a premium hospitality product: clear, elegant, and effortless to complete on any device." />
@@ -41,7 +53,16 @@ export default function ReservationsPage() {
           </div>
         </MotionBlock>
         <MotionBlock delay={0.08} className="rounded-[2.25rem] border border-white/70 bg-white/85 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.35)] sm:p-8">
-          <form className="grid gap-5 sm:grid-cols-2" onSubmit={handleSubmit}>
+          {!isLoggedIn ? (
+            <div className="mb-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-800">
+              You need to login before making a reservation in this demo.
+              {" "}
+              <Link to="/login" className="font-semibold text-stone-900 underline-offset-4 hover:underline">
+                Go to login
+              </Link>
+            </div>
+          ) : null}
+          <form className="grid gap-5" onSubmit={handleSubmit}><fieldset disabled={!isLoggedIn} className="grid gap-5 disabled:cursor-not-allowed disabled:opacity-60 sm:grid-cols-2">
             <Field label="Full Name" type="text" placeholder="Your full name" />
             <Field label="Phone Number" type="tel" placeholder="+91 98765 43210" />
             <Field label="Email" type="email" placeholder="you@example.com" />
@@ -76,7 +97,12 @@ export default function ReservationsPage() {
               </button>
               <p className="text-sm text-stone-500">Availability is typically confirmed within 15 minutes during service hours.</p>
             </div>
-          </form>
+          </fieldset></form>
+          {message ? (
+            <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-800">
+              {message}
+            </div>
+          ) : null}
           {submitted ? (
             <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-sm leading-7 text-emerald-800">
               Reservation request received. A confirmation message has been prepared for this premium demo flow.

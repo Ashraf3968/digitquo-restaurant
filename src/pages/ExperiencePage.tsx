@@ -8,7 +8,7 @@ export default function ExperiencePage() {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   return (
-    <section className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 xl:px-8 2xl:px-10 lg:py-16">
+    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <SectionIntro eyebrow="Experience" title="Video and gallery storytelling designed to make the brand feel tangible." description="From private dining to chef presentation, this page gives restaurant prospects and agency clients a polished visual narrative." />
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
         {videoItems.map((video, index) => (
@@ -22,7 +22,7 @@ export default function ExperiencePage() {
                     <p className="text-xl font-semibold">{video.title}</p>
                     <p className="mt-2 text-sm text-white/75">{video.description}</p>
                   </div>
-                  <span className="rounded-full bg-white/20 px-4 py-2 text-sm backdrop-blur">Play</span>
+                  <span className="rounded-full bg-white/20 px-4 py-2 text-sm ">Play</span>
                 </div>
               </div>
             </button>
@@ -39,7 +39,7 @@ export default function ExperiencePage() {
 
       <AnimatePresence>
         {activeVideo ? (
-          <motion.div className="fixed inset-0 z-[60] grid place-items-center bg-stone-950/70 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div className="fixed inset-0 z-[60] grid place-items-center bg-stone-950/70 p-4 " initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} className="w-full max-w-3xl rounded-[2rem] bg-white p-6 shadow-2xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -58,4 +58,5 @@ export default function ExperiencePage() {
     </section>
   );
 }
+
 
