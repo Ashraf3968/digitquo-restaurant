@@ -134,11 +134,12 @@ function isApiUnavailableError(error: unknown) {
     return false;
   }
 
+  const message = error.message.toLowerCase();
   return (
-    error.message.includes("local app server api was not found") ||
-    error.message.includes("Failed to fetch") ||
-    error.message.includes("Load failed") ||
-    error.message.includes("NetworkError")
+    message.includes("local app server api was not found") ||
+    message.includes("failed to fetch") ||
+    message.includes("load failed") ||
+    message.includes("networkerror")
   );
 }
 
