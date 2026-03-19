@@ -2,20 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import MotionBlock from "../components/common/MotionBlock";
 import SectionIntro from "../components/common/SectionIntro";
-import { deleteReview, getAdminDashboard, updateReservationStatus, type ReservationItem, type ReviewItem } from "../lib/api";
+import { deleteReview, getAdminDashboard, updateReservationStatus, type AdminUser, type ReservationItem, type ReviewItem } from "../lib/api";
 
-const ADMIN_EMAIL = "admin@digitquo.local";
-const ADMIN_PASSWORD = "DigitquoAdmin#2026";
+const ADMIN_EMAIL = "adminaccess@digitquo.com";
+const ADMIN_PASSWORD = "giveadminaccess@digitquo";
 const STORAGE_KEY = "digitquo-admin-session";
 
 export default function AdminPage() {
   const [authorized, setAuthorized] = useState(() => sessionStorage.getItem(STORAGE_KEY) === "active");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [reservations, setReservations] = useState<ReservationItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
 
   useEffect(() => {
     if (!authorized) {
@@ -30,6 +32,7 @@ export default function AdminPage() {
         if (active) {
           setReservations(data.reservations);
           setReviews(data.reviews);
+          setUsers(data.users);
         }
       } finally {
         if (active) {
@@ -49,8 +52,9 @@ export default function AdminPage() {
       reservations: reservations.length,
       pending: reservations.filter((item) => item.status === "Pending").length,
       reviews: reviews.length,
+      users: users.length,
     }),
-    [reservations, reviews]
+    [reservations, reviews, users]
   );
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
@@ -61,7 +65,7 @@ export default function AdminPage() {
       setError("");
       return;
     }
-    setError("Use the built-in demo admin credentials to access the dashboard.");
+    setError("Use the configured admin credentials to access the dashboard.");
   };
 
   const handleLogout = () => {
@@ -69,6 +73,7 @@ export default function AdminPage() {
     setAuthorized(false);
     setEmail("");
     setPassword("");
+    setShowPassword(false);
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -85,20 +90,25 @@ export default function AdminPage() {
     return (
       <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
         <div className="mx-auto max-w-lg rounded-[2.5rem] border border-white/70 bg-white/90 p-8 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-10">
-          <SectionIntro eyebrow="Admin Panel" title="Built-in dashboard access for reservations and reviews." description="This admin panel is included inside the project and reads the same local JSON database used by the public site." align="center" />
+          <SectionIntro eyebrow="Admin Panel" title="Built-in dashboard access for reservations, reviews, and users." description="This admin panel is included inside the project and reads the same local JSON data used by the public site." align="center" />
           <form className="mt-8 grid gap-5" onSubmit={handleLogin}>
             <div>
               <label className="mb-2 block text-sm font-medium text-stone-700">Admin Email</label>
-              <input className="form-input" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@digitquo.local" />
+              <input className="form-input" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="adminaccess@digitquo.com" />
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-stone-700">Password</label>
-              <input className="form-input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter admin password" />
+              <div className="relative">
+                <input className="form-input pr-24" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter admin password" />
+                <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
             <button type="submit" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">Open dashboard</button>
           </form>
           <div className="mt-6 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-7 text-stone-600">
-            Demo admin login: <strong>{ADMIN_EMAIL}</strong><br />Password: <strong>{ADMIN_PASSWORD}</strong>
+            Admin email: <strong>{ADMIN_EMAIL}</strong><br />Password: <strong>{ADMIN_PASSWORD}</strong>
           </div>
           {error ? <div className="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{error}</div> : null}
         </div>
@@ -109,17 +119,18 @@ export default function AdminPage() {
   return (
     <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <SectionIntro eyebrow="Admin Panel" title="Manage reservations and shared reviews from one built-in dashboard." description="Everything below is powered by the project's own JSON database with no external service required." />
+        <SectionIntro eyebrow="Admin Panel" title="Manage reservations, reviews, and users from one built-in dashboard." description="Everything below is powered by the project's own local data with no external service required." />
         <button type="button" onClick={handleLogout} className="rounded-full border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-amber-300 hover:bg-amber-50">Logout</button>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 grid gap-4 md:grid-cols-4">
         <StatCard label="Total reservations" value={String(totals.reservations)} />
         <StatCard label="Pending reservations" value={String(totals.pending)} />
         <StatCard label="Saved reviews" value={String(totals.reviews)} />
+        <StatCard label="Registered users" value={String(totals.users)} />
       </div>
 
-      <div className="mt-10 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="mt-10 grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
         <MotionBlock className="rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
           <h2 className="text-2xl font-semibold text-stone-900">Reservations</h2>
           <p className="mt-2 text-sm leading-7 text-stone-600">Update status for every booking request submitted through the public reservation form.</p>
@@ -169,6 +180,39 @@ export default function AdminPage() {
           </div>
         </MotionBlock>
       </div>
+
+      <MotionBlock className="mt-8 rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
+        <h2 className="text-2xl font-semibold text-stone-900">Users</h2>
+        <p className="mt-2 text-sm leading-7 text-stone-600">Registered accounts saved in the local project data. Passwords are visible here because this is a showcase-only admin panel.</p>
+        <div className="mt-6 overflow-x-auto">
+          <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm text-stone-700">
+            <thead>
+              <tr className="text-xs uppercase tracking-[0.2em] text-stone-500">
+                <th className="px-4">Name</th>
+                <th className="px-4">Email</th>
+                <th className="px-4">Password</th>
+                <th className="px-4">User ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td className="px-4 py-3 text-stone-500" colSpan={4}>Loading users...</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td className="px-4 py-3 text-stone-500" colSpan={4}>No users found.</td></tr>
+              ) : (
+                users.map((account) => (
+                  <tr key={account.id} className="rounded-2xl bg-stone-50">
+                    <td className="rounded-l-2xl px-4 py-4 font-semibold text-stone-900">{account.name}</td>
+                    <td className="px-4 py-4">{account.email}</td>
+                    <td className="px-4 py-4">{account.password}</td>
+                    <td className="rounded-r-2xl px-4 py-4 text-stone-500">{account.id}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </MotionBlock>
     </section>
   );
 }

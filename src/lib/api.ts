@@ -29,12 +29,12 @@ export type AuthUser = {
   email: string;
 };
 
-type StoredUser = AuthUser & {
+export type AdminUser = AuthUser & {
   password: string;
 };
 
 type DemoDb = {
-  users: StoredUser[];
+  users: AdminUser[];
   reviews: ReviewItem[];
   reservations: ReservationItem[];
 };
@@ -125,7 +125,7 @@ function writeLocalDb(data: DemoDb) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function toAuthUser(user: StoredUser): AuthUser {
+function toAuthUser(user: AdminUser): AuthUser {
   return { id: user.id, name: user.name, email: user.email };
 }
 
@@ -215,7 +215,7 @@ export async function signupUser(payload: { name: string; email: string; passwor
       throw new Error("An account with this email already exists.");
     }
 
-    const user: StoredUser = {
+    const user: AdminUser = {
       id: createId("user"),
       name: payload.name.trim(),
       email,
@@ -301,7 +301,7 @@ export async function createReservation(payload: Omit<ReservationItem, "id" | "s
 
 export async function getAdminDashboard() {
   try {
-    return await requestJson<{ reservations: ReservationItem[]; reviews: ReviewItem[] }>("/api/admin/dashboard");
+    return await requestJson<{ reservations: ReservationItem[]; reviews: ReviewItem[]; users: AdminUser[] }>("/api/admin/dashboard");
   } catch (error) {
     if (!isApiUnavailableError(error)) {
       throw error;
@@ -311,6 +311,7 @@ export async function getAdminDashboard() {
     return {
       reservations: [...db.reservations].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
       reviews: [...db.reviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      users: [...db.users],
     };
   }
 }

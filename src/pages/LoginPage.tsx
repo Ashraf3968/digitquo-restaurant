@@ -9,10 +9,14 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     setSubmitting(true);
     const result = await login({
       email: String(formData.get("email") ?? ""),
@@ -22,13 +26,14 @@ export default function LoginPage() {
     setSubmitting(false);
     setMessage(result.ok ? "Welcome back. Your member account is now active." : result.message ?? "");
     if (result.ok) {
-      event.currentTarget.reset();
+      form.reset();
     }
   };
 
   const handleSignup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     setSubmitting(true);
     const result = await signup({
       name: String(formData.get("name") ?? ""),
@@ -40,7 +45,7 @@ export default function LoginPage() {
     setSubmitting(false);
     setMessage(result.ok ? "Account created successfully. You are now logged in." : result.message ?? "");
     if (result.ok) {
-      event.currentTarget.reset();
+      form.reset();
     }
   };
 
@@ -51,11 +56,11 @@ export default function LoginPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-700/80">Member Access</p>
             <h1 className="mt-6 font-serif text-5xl leading-tight text-stone-900">A premium login experience for reservations and guest perks.</h1>
-            <p className="mt-6 max-w-lg text-base leading-8 text-stone-600">Accounts are now stored in the local project database, so only registered users can sign in.</p>
+            <p className="mt-6 max-w-lg text-base leading-8 text-stone-600">Accounts are stored in the local project data, so only registered users can sign in.</p>
           </div>
           <div className="rounded-[2rem] bg-white/80 p-6">
             <p className="font-semibold text-stone-900">{siteMeta.brand}</p>
-            <p className="mt-2 text-sm leading-7 text-stone-600">Create an account once, then use the same credentials to submit reservations and public reviews through the local app server.</p>
+            <p className="mt-2 text-sm leading-7 text-stone-600">Create an account once, then use the same credentials to submit reservations and public reviews through the showcase app.</p>
           </div>
         </MotionBlock>
         <MotionBlock delay={0.08} className="mx-auto flex w-full max-w-xl flex-col justify-center rounded-[2.5rem] border border-white/70 bg-white/85 p-8 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-10">
@@ -98,24 +103,10 @@ export default function LoginPage() {
           ) : (
             <>
               <div className="mt-8 grid grid-cols-2 gap-2 rounded-full bg-stone-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("login");
-                    setMessage("");
-                  }}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mode === "login" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"}`}
-                >
+                <button type="button" onClick={() => { setMode("login"); setMessage(""); }} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mode === "login" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"}`}>
                   Login
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("signup");
-                    setMessage("");
-                  }}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mode === "signup" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"}`}
-                >
+                <button type="button" onClick={() => { setMode("signup"); setMessage(""); }} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mode === "signup" ? "bg-white text-stone-900 shadow-sm" : "text-stone-500"}`}>
                   Create account
                 </button>
               </div>
@@ -128,7 +119,12 @@ export default function LoginPage() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-stone-700">Password</label>
-                    <input className="form-input" name="password" type="password" placeholder="Enter password" />
+                    <div className="relative">
+                      <input className="form-input pr-24" name="password" type={showLoginPassword ? "text" : "password"} placeholder="Enter password" />
+                      <button type="button" onClick={() => setShowLoginPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                        {showLoginPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between text-sm text-stone-500">
                     <label className="flex items-center gap-2"><input type="checkbox" className="rounded border-stone-300" /> Remember me</label>
@@ -149,11 +145,21 @@ export default function LoginPage() {
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-stone-700">Password</label>
-                    <input className="form-input" name="password" type="password" placeholder="Create a password" />
+                    <div className="relative">
+                      <input className="form-input pr-24" name="password" type={showSignupPassword ? "text" : "password"} placeholder="Create a password" />
+                      <button type="button" onClick={() => setShowSignupPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                        {showSignupPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-stone-700">Confirm Password</label>
-                    <input className="form-input" name="confirmPassword" type="password" placeholder="Confirm password" />
+                    <div className="relative">
+                      <input className="form-input pr-24" name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirm password" />
+                      <button type="button" onClick={() => setShowConfirmPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                        {showConfirmPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
                   </div>
                   <button type="submit" disabled={submitting} className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70">{submitting ? "Creating..." : "Create account"}</button>
                   <p className="text-center text-sm text-stone-500">Already a member? <button type="button" onClick={() => setMode("login")} className="font-semibold text-stone-900">Login</button></p>

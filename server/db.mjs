@@ -100,6 +100,11 @@ export function authenticateUser(payload) {
   return { id: user.id, name: user.name, email: user.email };
 }
 
+export function listUsers() {
+  const data = readDb();
+  return data.users;
+}
+
 export function listReviews() {
   const data = readDb();
   return data.reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -166,6 +171,7 @@ export function removeReview(id) {
 
 export function getDashboard() {
   return {
+    users: listUsers(),
     reservations: listReservations(),
     reviews: listReviews()
   };

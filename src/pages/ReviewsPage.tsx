@@ -52,7 +52,7 @@ export default function ReviewsPage() {
       }
     }
 
-    loadReviews();
+    void loadReviews();
     return () => {
       active = false;
     };
@@ -75,7 +75,8 @@ export default function ReviewsPage() {
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
 
     try {
       setSubmitting(true);
@@ -89,7 +90,7 @@ export default function ReviewsPage() {
       });
       setReviews((current) => [newReview, ...current]);
       setSubmitted(true);
-      event.currentTarget.reset();
+      form.reset();
     } catch (error) {
       setSubmitted(false);
       setMessage(error instanceof Error ? error.message : "Could not submit the review right now.");
@@ -100,7 +101,7 @@ export default function ReviewsPage() {
 
   return (
     <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
-      <SectionIntro eyebrow="Reviews" title="Trust-building testimonials with a premium, editorial layout." description="This page now reads from the built-in project database so new guest reviews appear for every visitor using the same server." align="center" />
+      <SectionIntro eyebrow="Reviews" title="Trust-building testimonials with a premium, editorial layout." description="This page now reads from the built-in project database so new guest reviews appear for every visitor using the same server or local showcase storage." align="center" />
 
       <MotionBlock className="mx-auto mt-8 max-w-3xl rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_18px_55px_rgba(221,210,192,0.3)] sm:p-8">
         <div className="grid gap-6 md:grid-cols-[0.9fr_1.1fr] md:items-center">
@@ -108,7 +109,7 @@ export default function ReviewsPage() {
             <p className="text-sm uppercase tracking-[0.35em] text-stone-500">Average rating</p>
             <p className="mt-3 text-5xl font-semibold text-stone-900">{averageRating}/5</p>
             <StarRating rating={Math.round(averageRating)} className="mt-4 justify-center md:justify-start" />
-            <p className="mt-3 text-stone-600">Based on {reviews.length} shared guest reviews stored in the in-project database.</p>
+            <p className="mt-3 text-stone-600">Based on {reviews.length} saved guest reviews.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
             {reviewHighlights.map((item) => (
@@ -138,7 +139,7 @@ export default function ReviewsPage() {
       </div>
 
       <MotionBlock className="mt-12 rounded-[2.25rem] border border-white/70 bg-white/80 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-        <SectionIntro eyebrow="Leave a Review" title="Invite guests to share polished, trust-building feedback." description="Submitted reviews are saved inside this project and will appear for every visitor using the same app server." />
+        <SectionIntro eyebrow="Leave a Review" title="Invite guests to share polished, trust-building feedback." description="Submitted reviews are saved and can be deleted from the admin panel." />
         {!isLoggedIn ? (
           <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-800">
             Please login first to submit a review. <Link to="/login" className="font-semibold text-stone-900 underline-offset-4 hover:underline">Open login</Link>
@@ -166,12 +167,12 @@ export default function ReviewsPage() {
               <button type="submit" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">
                 {submitting ? "Saving..." : "Submit review"}
               </button>
-              <p className="text-sm text-stone-500">Reviews are shared across the site through the built-in local project database.</p>
+              <p className="text-sm text-stone-500">Reviews are manageable from the admin panel after submission.</p>
             </div>
           </fieldset>
         </form>
         {message ? <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{message}</div> : null}
-        {submitted ? <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">Review submitted successfully and saved for all visitors on this server.</div> : null}
+        {submitted ? <div className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">Review submitted successfully and saved.</div> : null}
       </MotionBlock>
     </section>
   );

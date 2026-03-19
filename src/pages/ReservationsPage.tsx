@@ -28,7 +28,8 @@ export default function ReservationsPage() {
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
 
     try {
       setSubmitting(true);
@@ -46,7 +47,7 @@ export default function ReservationsPage() {
         specialRequests: String(formData.get("specialRequests") ?? ""),
       });
       setSubmitted(true);
-      event.currentTarget.reset();
+      form.reset();
     } catch (error) {
       setSubmitted(false);
       setMessage(error instanceof Error ? error.message : "Could not submit the reservation right now.");
