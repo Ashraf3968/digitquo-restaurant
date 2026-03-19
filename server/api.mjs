@@ -1,4 +1,4 @@
-import { addReservation, addReview, authenticateUser, createUser, getDashboard, listReviews, removeReview, removeUser, updateReservation, updateUserStatus } from "./db.mjs";
+import { handleApiRoute } from "./handlers.mjs";
 
 function sendJson(res, status, payload) {
   res.statusCode = status;
@@ -6,18 +6,16 @@ function sendJson(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function notFound(res) {
-  sendJson(res, 404, { message: "Not found" });
-}
-
 async function readBody(req) {
   const chunks = [];
   for await (const chunk of req) {
     chunks.push(chunk);
   }
+
   if (chunks.length === 0) {
     return {};
   }
+
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
@@ -30,108 +28,19 @@ export async function handleApiRequest(req, res) {
   }
 
   try {
-    if (pathname === "/api/auth/signup" && req.method === "POST") {
-      const body = await readBody(req);
-      if (!body.name || !body.email || !body.password) {
-        sendJson(res, 400, { message: "Name, email, and password are required to create an account." });
-        return true;
-      }
+    const body = req.method === "GET" || req.method === "DELETE" ? {} : await readBody(req);
+    const { status, payload } = await handleApiRoute({
+      pathname,
+      method: req.method || "GET",
+      body,
+    });
 
-      try {
-        sendJson(res, 201, createUser(body));
-      } catch (error) {
-        sendJson(res, 409, { message: error instanceof Error ? error.message : "Could not create account." });
-      }
-      return true;
-    }
-
-    if (pathname === "/api/auth/login" && req.method === "POST") {
-      const body = await readBody(req);
-      if (!body.email || !body.password) {
-        sendJson(res, 400, { message: "Email and password are required to login." });
-        return true;
-      }
-
-      try {
-        sendJson(res, 200, authenticateUser(body));
-      } catch (error) {
-        sendJson(res, 401, { message: error instanceof Error ? error.message : "Login failed." });
-      }
-      return true;
-    }
-
-    if (pathname === "/api/reviews" && req.method === "GET") {
-      sendJson(res, 200, listReviews());
-      return true;
-    }
-
-    if (pathname === "/api/reviews" && req.method === "POST") {
-      const body = await readBody(req);
-      if (!body.name || !body.quote || !body.rating) {
-        sendJson(res, 400, { message: "Name, rating, and review message are required." });
-        return true;
-      }
-      sendJson(res, 201, addReview(body));
-      return true;
-    }
-
-    if (pathname === "/api/reservations" && req.method === "POST") {
-      const body = await readBody(req);
-      if (!body.fullName || !body.phone || !body.email || !body.date || !body.time) {
-        sendJson(res, 400, { message: "Please complete the reservation form before submitting." });
-        return true;
-      }
-      sendJson(res, 201, addReservation(body));
-      return true;
-    }
-
-    if (pathname === "/api/admin/dashboard" && req.method === "GET") {
-      sendJson(res, 200, getDashboard());
-      return true;
-    }
-
-    if (pathname.startsWith("/api/admin/reservations/") && req.method === "PATCH") {
-      const id = pathname.split("/").pop();
-      const body = await readBody(req);
-      const updated = updateReservation(id, body.status);
-      if (!updated) {
-        notFound(res);
-        return true;
-      }
-      sendJson(res, 200, updated);
-      return true;
-    }
-
-    if (pathname.startsWith("/api/admin/users/") && pathname.endsWith("/status") && req.method === "PATCH") {
-      const id = pathname.split("/")[4];
-      const body = await readBody(req);
-      const updated = updateUserStatus(id, body.status);
-      if (!updated) {
-        notFound(res);
-        return true;
-      }
-      sendJson(res, 200, updated);
-      return true;
-    }
-
-    if (pathname.startsWith("/api/admin/users/") && req.method === "DELETE") {
-      const id = pathname.split("/").pop();
-      removeUser(id);
-      sendJson(res, 200, { ok: true });
-      return true;
-    }
-
-    if (pathname.startsWith("/api/admin/reviews/") && req.method === "DELETE") {
-      const id = pathname.split("/").pop();
-      removeReview(id);
-      sendJson(res, 200, { ok: true });
-      return true;
-    }
-
-    notFound(res);
+    sendJson(res, status, payload);
     return true;
   } catch (error) {
-    sendJson(res, 500, { message: error instanceof Error ? error.message : "Unexpected server error." });
+    sendJson(res, 500, {
+      message: error instanceof Error ? error.message : "Unexpected server error.",
+    });
     return true;
   }
 }

@@ -162,6 +162,7 @@ function isApiUnavailableError(error: unknown) {
   const message = error.message.toLowerCase();
   return (
     message.includes("local app server api was not found") ||
+    message.includes("shared storage is not configured") ||
     message.includes("failed to fetch") ||
     message.includes("load failed") ||
     message.includes("networkerror")
