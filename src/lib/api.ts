@@ -29,6 +29,119 @@ export type AuthUser = {
   email: string;
 };
 
+type StoredUser = AuthUser & {
+  password: string;
+};
+
+type DemoDb = {
+  users: StoredUser[];
+  reviews: ReviewItem[];
+  reservations: ReservationItem[];
+};
+
+const STORAGE_KEY = "digitquo-demo-db";
+
+const seededReviews: ReviewItem[] = [
+  {
+    id: "review-seed-1",
+    name: "Aarav Mehta",
+    role: "Private Banking Director",
+    rating: 5,
+    quote: "The design, service, and reservation experience all feel five-star. This is exactly how a modern restaurant brand should present itself online.",
+    avatar: "AM",
+    createdAt: "2026-03-18T19:30:00.000Z",
+  },
+  {
+    id: "review-seed-2",
+    name: "Riya Kapoor",
+    role: "Lifestyle Editor",
+    rating: 5,
+    quote: "Elegant, bright, and beautifully paced. The digital experience mirrors the atmosphere of a truly premium dining room.",
+    avatar: "RK",
+    createdAt: "2026-03-17T18:10:00.000Z",
+  },
+  {
+    id: "review-seed-3",
+    name: "Nikhil Shah",
+    role: "Founder, Atelier Events",
+    rating: 4,
+    quote: "Private dining and event inquiries feel especially polished. It builds trust the moment you land on the site.",
+    avatar: "NS",
+    createdAt: "2026-03-16T17:05:00.000Z",
+  },
+];
+
+const initialDb: DemoDb = {
+  users: [
+    {
+      id: "user-seed-1",
+      name: "Demo Member",
+      email: "member@maisonember.com",
+      password: "member123",
+    },
+  ],
+  reviews: seededReviews,
+  reservations: [],
+};
+
+function isBrowser() {
+  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+function createId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function readLocalDb(): DemoDb {
+  if (!isBrowser()) {
+    return structuredClone(initialDb);
+  }
+
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initialDb));
+    return structuredClone(initialDb);
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<DemoDb>;
+    const db: DemoDb = {
+      users: Array.isArray(parsed.users) ? parsed.users : structuredClone(initialDb.users),
+      reviews: Array.isArray(parsed.reviews) && parsed.reviews.length > 0 ? parsed.reviews : structuredClone(initialDb.reviews),
+      reservations: Array.isArray(parsed.reservations) ? parsed.reservations : [],
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    return db;
+  } catch {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initialDb));
+    return structuredClone(initialDb);
+  }
+}
+
+function writeLocalDb(data: DemoDb) {
+  if (!isBrowser()) {
+    return;
+  }
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function toAuthUser(user: StoredUser): AuthUser {
+  return { id: user.id, name: user.name, email: user.email };
+}
+
+function isApiUnavailableError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.message.includes("local app server api was not found") ||
+    error.message.includes("Failed to fetch") ||
+    error.message.includes("Load failed") ||
+    error.message.includes("NetworkError")
+  );
+}
+
 async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     headers: {
@@ -42,6 +155,10 @@ async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T
     const contentType = response.headers.get("content-type") ?? "";
     const text = await response.text();
 
+    if (response.status === 404) {
+      throw new Error("The local app server API was not found.");
+    }
+
     if (contentType.includes("application/json")) {
       let parsedMessage = "";
       try {
@@ -52,61 +169,186 @@ async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T
       throw new Error(parsedMessage || text || "Request failed.");
     }
 
-    if (response.status === 404) {
-      throw new Error("The local app server API was not found. Run the site with npm run dev or npm run start.");
-    }
-
     throw new Error(text || "Request failed.");
   }
 
   return response.json() as Promise<T>;
 }
 
-export function loginUser(payload: { email: string; password: string }) {
-  return requestJson<AuthUser>("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export async function loginUser(payload: { email: string; password: string }) {
+  try {
+    return await requestJson<AuthUser>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    const email = payload.email.trim().toLowerCase();
+    const user = db.users.find((item) => item.email.toLowerCase() === email && item.password === payload.password);
+    if (!user) {
+      throw new Error("No registered account matched those login details.");
+    }
+    return toAuthUser(user);
+  }
 }
 
-export function signupUser(payload: { name: string; email: string; password: string }) {
-  return requestJson<AuthUser>("/api/auth/signup", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export async function signupUser(payload: { name: string; email: string; password: string }) {
+  try {
+    return await requestJson<AuthUser>("/api/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    const email = payload.email.trim().toLowerCase();
+    const exists = db.users.some((item) => item.email.toLowerCase() === email);
+    if (exists) {
+      throw new Error("An account with this email already exists.");
+    }
+
+    const user: StoredUser = {
+      id: createId("user"),
+      name: payload.name.trim(),
+      email,
+      password: payload.password,
+    };
+    db.users.unshift(user);
+    writeLocalDb(db);
+    return toAuthUser(user);
+  }
 }
 
-export function getReviews() {
-  return requestJson<ReviewItem[]>("/api/reviews");
+export async function getReviews() {
+  try {
+    return await requestJson<ReviewItem[]>("/api/reviews");
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    return [...db.reviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
 }
 
-export function createReview(payload: { name: string; role: string; rating: number; quote: string }) {
-  return requestJson<ReviewItem>("/api/reviews", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export async function createReview(payload: { name: string; role: string; rating: number; quote: string }) {
+  try {
+    return await requestJson<ReviewItem>("/api/reviews", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    const review: ReviewItem = {
+      id: createId("review"),
+      name: payload.name.trim(),
+      role: payload.role.trim() || "Verified guest",
+      rating: Number(payload.rating),
+      quote: payload.quote.trim(),
+      avatar: payload.name.trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "GU",
+      createdAt: new Date().toISOString(),
+    };
+    db.reviews.unshift(review);
+    writeLocalDb(db);
+    return review;
+  }
 }
 
-export function createReservation(payload: Omit<ReservationItem, "id" | "status" | "createdAt">) {
-  return requestJson<ReservationItem>("/api/reservations", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export async function createReservation(payload: Omit<ReservationItem, "id" | "status" | "createdAt">) {
+  try {
+    return await requestJson<ReservationItem>("/api/reservations", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    const reservation: ReservationItem = {
+      id: createId("reservation"),
+      fullName: payload.fullName.trim(),
+      phone: payload.phone.trim(),
+      email: payload.email.trim(),
+      guests: Number(payload.guests),
+      date: payload.date,
+      time: payload.time,
+      seating: payload.seating,
+      occasion: payload.occasion,
+      specialRequests: payload.specialRequests.trim(),
+      status: "Pending",
+      createdAt: new Date().toISOString(),
+    };
+    db.reservations.unshift(reservation);
+    writeLocalDb(db);
+    return reservation;
+  }
 }
 
-export function getAdminDashboard() {
-  return requestJson<{ reservations: ReservationItem[]; reviews: ReviewItem[] }>("/api/admin/dashboard");
+export async function getAdminDashboard() {
+  try {
+    return await requestJson<{ reservations: ReservationItem[]; reviews: ReviewItem[] }>("/api/admin/dashboard");
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    return {
+      reservations: [...db.reservations].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+      reviews: [...db.reviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    };
+  }
 }
 
-export function updateReservationStatus(id: string, status: string) {
-  return requestJson<ReservationItem>(`/api/admin/reservations/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
+export async function updateReservationStatus(id: string, status: string) {
+  try {
+    return await requestJson<ReservationItem>(`/api/admin/reservations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    const reservation = db.reservations.find((item) => item.id === id);
+    if (!reservation) {
+      throw new Error("Reservation not found.");
+    }
+    reservation.status = status;
+    writeLocalDb(db);
+    return reservation;
+  }
 }
 
-export function deleteReview(id: string) {
-  return requestJson<{ ok: true }>(`/api/admin/reviews/${id}`, {
-    method: "DELETE",
-  });
+export async function deleteReview(id: string) {
+  try {
+    return await requestJson<{ ok: true }>(`/api/admin/reviews/${id}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    if (!isApiUnavailableError(error)) {
+      throw error;
+    }
+
+    const db = readLocalDb();
+    db.reviews = db.reviews.filter((item) => item.id !== id);
+    writeLocalDb(db);
+    return { ok: true as const };
+  }
 }
