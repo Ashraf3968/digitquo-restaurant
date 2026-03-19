@@ -23,6 +23,7 @@ export default function Footer() {
               </Link>
             ))}
             <Link to="/terms" className="transition hover:text-stone-900">Terms & Conditions</Link>
+            <Link to="/admin" className="transition hover:text-stone-900">Admin Panel</Link>
           </div>
         </div>
         <div>
@@ -57,4 +58,3 @@ export default function Footer() {
     </footer>
   );
 }
-

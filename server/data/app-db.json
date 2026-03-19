@@ -1,0 +1,32 @@
+{
+  "reservations": [],
+  "reviews": [
+    {
+      "id": "review-seed-1",
+      "name": "Aarav Mehta",
+      "role": "Private Banking Director",
+      "rating": 5,
+      "quote": "The design, service, and reservation experience all feel five-star. This is exactly how a modern restaurant brand should present itself online.",
+      "avatar": "AM",
+      "createdAt": "2026-03-18T19:30:00.000Z"
+    },
+    {
+      "id": "review-seed-2",
+      "name": "Riya Kapoor",
+      "role": "Lifestyle Editor",
+      "rating": 5,
+      "quote": "Elegant, bright, and beautifully paced. The digital experience mirrors the atmosphere of a truly premium dining room.",
+      "avatar": "RK",
+      "createdAt": "2026-03-17T18:10:00.000Z"
+    },
+    {
+      "id": "review-seed-3",
+      "name": "Nikhil Shah",
+      "role": "Founder, Atelier Events",
+      "rating": 4,
+      "quote": "Private dining and event inquiries feel especially polished. It builds trust the moment you land on the site.",
+      "avatar": "NS",
+      "createdAt": "2026-03-16T17:05:00.000Z"
+    }
+  ]
+}

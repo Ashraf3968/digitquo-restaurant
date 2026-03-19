@@ -1,4 +1,4 @@
-﻿export type ReviewItem = {
+export type ReviewItem = {
   id: string;
   name: string;
   role: string;

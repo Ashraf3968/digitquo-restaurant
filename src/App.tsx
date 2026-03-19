@@ -1,4 +1,4 @@
-﻿import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
