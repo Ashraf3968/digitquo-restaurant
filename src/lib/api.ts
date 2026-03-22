@@ -25,6 +25,14 @@ function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function mergeSeededItems<T extends { id: string }>(seeded: T[], stored: T[]) {
+  const storedMap = new Map(stored.map((item) => [item.id, item]));
+  const seededIds = new Set(seeded.map((item) => item.id));
+  const mergedSeeded = seeded.map((item) => storedMap.get(item.id) ? { ...storedMap.get(item.id), ...item } : item);
+  const customItems = stored.filter((item) => !seededIds.has(item.id));
+  return [...mergedSeeded, ...customItems];
+}
+
 function readDb(): StoreDb {
   const initial = createInitialStore();
 
@@ -43,16 +51,16 @@ function readDb(): StoreDb {
     const next: StoreDb = {
       ...initial,
       ...parsed,
-      categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : initial.categories,
-      products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : initial.products,
+      categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? mergeSeededItems(initial.categories, parsed.categories) : initial.categories,
+      products: Array.isArray(parsed.products) && parsed.products.length > 0 ? mergeSeededItems(initial.products, parsed.products) : initial.products,
       reviews: Array.isArray(parsed.reviews) ? parsed.reviews : initial.reviews,
-      testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : initial.testimonials,
+      testimonials: Array.isArray(parsed.testimonials) ? mergeSeededItems(initial.testimonials, parsed.testimonials) : initial.testimonials,
       inquiries: Array.isArray(parsed.inquiries) ? parsed.inquiries : initial.inquiries,
       orders: Array.isArray(parsed.orders) ? parsed.orders : initial.orders,
       users: Array.isArray(parsed.users) ? parsed.users : initial.users,
-      hours: Array.isArray(parsed.hours) ? parsed.hours : initial.hours,
-      media: Array.isArray(parsed.media) ? parsed.media : initial.media,
-      faqs: Array.isArray(parsed.faqs) ? parsed.faqs : initial.faqs,
+      hours: Array.isArray(parsed.hours) ? mergeSeededItems(initial.hours.map((item) => ({ ...item, id: item.label })), parsed.hours.map((item) => ({ ...item, id: item.label }))).map(({ id: _id, ...item }) => item) : initial.hours,
+      media: Array.isArray(parsed.media) ? mergeSeededItems(initial.media, parsed.media) : initial.media,
+      faqs: Array.isArray(parsed.faqs) ? mergeSeededItems(initial.faqs, parsed.faqs) : initial.faqs,
     };
     writeDb(next);
     return clone(next);

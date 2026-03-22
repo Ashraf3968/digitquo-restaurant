@@ -13,6 +13,7 @@ export default function ProductDetailsPage() {
   const [related, setRelated] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState("");
   const [feedback, setFeedback] = useState("");
   const { addItem } = useCart();
   const navigate = useNavigate();
@@ -23,10 +24,13 @@ export default function ProductDetailsPage() {
       if (!nextProduct) {
         return;
       }
+
       const [nextReviews, nextRelated] = await Promise.all([
         getProductReviews(nextProduct.id),
         getRelatedProducts(nextProduct.categoryId, nextProduct.id),
       ]);
+
+      setSelectedImage(nextProduct.gallery[0] ?? nextProduct.image);
       setReviews(nextReviews);
       setRelated(nextRelated);
     });
@@ -41,13 +45,18 @@ export default function ProductDetailsPage() {
       <section className="grid gap-10 lg:grid-cols-[1fr_0.92fr]">
         <div className="space-y-5">
           <div className="overflow-hidden rounded-[36px] bg-white shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
-            <img className="h-[520px] w-full object-cover" src={product.image} alt={product.name} />
+            <img className="h-[520px] w-full object-cover" src={selectedImage || product.image} alt={product.name} />
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-4">
             {product.gallery.map((image, index) => (
-              <div key={`${image}-${index}`} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-                <img className="h-32 w-full object-cover" src={image} alt={`${product.name} gallery ${index + 1}`} />
-              </div>
+              <button
+                type="button"
+                key={`${image}-${index}`}
+                className={`overflow-hidden rounded-[24px] border bg-white ${selectedImage === image ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" : "border-slate-200"}`}
+                onClick={() => setSelectedImage(image)}
+              >
+                <img className="h-28 w-full object-cover" src={image} alt={`${product.name} gallery ${index + 1}`} />
+              </button>
             ))}
           </div>
         </div>
@@ -104,7 +113,12 @@ export default function ProductDetailsPage() {
 
       <section className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
         <div className="rounded-[36px] bg-white p-8 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-          <div className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Customer Reviews</div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Customer Reviews</div>
+            <div className="rounded-[22px] bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Average rating <span className="font-semibold text-slate-950">{product.rating.toFixed(1)}</span> from {product.reviewCount} reviews
+            </div>
+          </div>
           <div className="mt-6 space-y-5">
             {reviews.map((review) => (
               <div key={review.id} className="rounded-[24px] border border-slate-200 p-5">
@@ -129,6 +143,7 @@ export default function ProductDetailsPage() {
             onSubmit={async (event) => {
               event.preventDefault();
               const formData = new FormData(event.currentTarget);
+
               await createReview({
                 productId: product.id,
                 name: String(formData.get("name") ?? ""),
@@ -136,6 +151,7 @@ export default function ProductDetailsPage() {
                 title: String(formData.get("title") ?? ""),
                 text: String(formData.get("text") ?? ""),
               });
+
               setFeedback("Review submitted successfully.");
               setReviews(await getProductReviews(product.id));
               event.currentTarget.reset();

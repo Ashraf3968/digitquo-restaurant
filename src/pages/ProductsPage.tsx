@@ -62,6 +62,10 @@ export default function ProductsPage() {
     setSearchParams(next);
   };
 
+  const resetFilters = () => {
+    setSearchParams(new URLSearchParams());
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 lg:px-8">
       <SectionHeading eyebrow="Products" title="Search, sort, and filter the complete Mega Mart catalog" description="A responsive retail grid with category controls, search, sorting, and realistic seeded product data across 15 departments." />
@@ -113,9 +117,21 @@ export default function ProductsPage() {
               <div className="mt-1 text-lg font-semibold text-slate-950">{filteredProducts.length} products matched your filters</div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {["Fresh produce", "Weekly staples", "Household care", "Fast delivery"].map((chip) => (
-                <span key={chip} className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600">{chip}</span>
+              {categories.slice(0, 5).map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => updateParam("category", category.slug)}
+                  className={`rounded-full px-4 py-2 text-sm ${categoryFilter === category.slug ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-600"}`}
+                >
+                  {category.name}
+                </button>
               ))}
+              {(categoryFilter !== "all" || query || sortBy !== "popular") ? (
+                <button type="button" onClick={resetFilters} className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+                  Clear filters
+                </button>
+              ) : null}
             </div>
           </div>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

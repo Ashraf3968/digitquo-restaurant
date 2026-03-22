@@ -8,6 +8,7 @@ export type CartItem = {
   image: string;
   quantity: number;
   unit: string;
+  stockCount: number;
 };
 
 type CartContextValue = {
@@ -62,7 +63,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const existing = current.find((item) => item.productId === product.id);
             if (existing) {
               return current.map((item) =>
-                item.productId === product.id ? { ...item, quantity: item.quantity + quantity } : item
+                item.productId === product.id
+                  ? { ...item, quantity: Math.min(item.quantity + quantity, item.stockCount) }
+                  : item
               );
             }
             return [
@@ -72,8 +75,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 name: product.name,
                 price: product.price,
                 image: product.image,
-                quantity,
+                quantity: Math.min(quantity, product.stockCount),
                 unit: product.unit,
+                stockCount: product.stockCount,
               },
             ];
           });
@@ -87,7 +91,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               if (quantity <= 0) {
                 return [];
               }
-              return { ...item, quantity };
+              return { ...item, quantity: Math.min(quantity, item.stockCount) };
             })
           );
         },

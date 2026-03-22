@@ -1,7 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { createCategory, createOrUpdateProduct, deleteProduct, getAdminDashboard, resetStore, updateOrderStatus } from "../lib/api";
+import {
+  createCategory,
+  createOrUpdateProduct,
+  deleteProduct,
+  getAdminDashboard,
+  resetStore,
+  updateOrderStatus,
+} from "../lib/api";
 import type { Category, Order, Product, Review, SupportInquiry } from "../types";
 
 type DashboardState = {
@@ -26,7 +33,6 @@ const emptyDraft = {
   name: "",
   slug: "",
   categoryId: "",
-  categoryName: "",
   brand: "",
   unit: "",
   price: "0",
@@ -43,6 +49,7 @@ export default function AdminPage() {
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [draft, setDraft] = useState(emptyDraft);
   const [message, setMessage] = useState("");
+  const [productSearch, setProductSearch] = useState("");
 
   const loadDashboard = async () => {
     const next = await getAdminDashboard();
@@ -53,14 +60,35 @@ export default function AdminPage() {
     void loadDashboard();
   }, []);
 
+  const visibleProducts = useMemo(() => {
+    if (!dashboard) {
+      return [];
+    }
+    const query = productSearch.trim().toLowerCase();
+    if (!query) {
+      return dashboard.products.slice(0, 10);
+    }
+    return dashboard.products.filter((product) => {
+      return (
+        product.name.toLowerCase().includes(query) ||
+        product.categoryName.toLowerCase().includes(query) ||
+        product.brand.toLowerCase().includes(query)
+      );
+    });
+  }, [dashboard, productSearch]);
+
   if (!user || !isAdmin) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
         <div className="rounded-[36px] bg-white p-10 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
           <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Admin Login</div>
           <h1 className="mt-4 font-display text-4xl text-slate-950">Restricted admin area</h1>
-          <p className="mt-4 text-base leading-8 text-slate-600">Sign in with `admin@megamart.com` and password `admin123` to access the dashboard.</p>
-          <Link to="/login" className="mt-6 inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white">Go to login</Link>
+          <p className="mt-4 text-base leading-8 text-slate-600">
+            Sign in with `admin@megamart.com` and password `admin123` to access the dashboard.
+          </p>
+          <Link to="/login" className="mt-6 inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white">
+            Go to login
+          </Link>
         </div>
       </div>
     );
@@ -79,7 +107,9 @@ export default function AdminPage() {
           <div className="mt-1 text-sm text-slate-300">{user.email}</div>
           <div className="mt-8 grid gap-3 text-sm">
             {["Overview", "Products", "Categories", "Orders", "Reviews", "Inquiries"].map((item) => (
-              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">{item}</div>
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                {item}
+              </div>
             ))}
           </div>
           <button
@@ -87,8 +117,10 @@ export default function AdminPage() {
             className="mt-8 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950"
             onClick={() => {
               resetStore();
-              void loadDashboard();
+              setDraft(emptyDraft);
+              setProductSearch("");
               setMessage("Store reset to seeded local data.");
+              void loadDashboard();
             }}
           >
             Reset demo data
@@ -115,30 +147,42 @@ export default function AdminPage() {
           <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-8">
               <section className="rounded-[32px] bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-xl font-semibold text-slate-950">Product management</h2>
-                  <div className="text-sm text-slate-500">{dashboard.products.length} products</div>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-950">Product management</h2>
+                    <div className="text-sm text-slate-500">{dashboard.products.length} products in the local catalog</div>
+                  </div>
+                  <input
+                    className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400"
+                    placeholder="Search products"
+                    value={productSearch}
+                    onChange={(event) => setProductSearch(event.target.value)}
+                  />
                 </div>
+
                 <form
                   className="mt-6 grid gap-4 md:grid-cols-2"
                   onSubmit={async (event) => {
                     event.preventDefault();
                     const category = dashboard.categories.find((item) => item.id === draft.categoryId) ?? dashboard.categories[0];
+                    const image = draft.image.trim();
+                    const oldPrice = draft.oldPrice.trim();
+
                     const product: Product = {
                       id: draft.id || `product-${Date.now()}`,
                       slug: draft.slug || draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-                      name: draft.name,
+                      name: draft.name.trim(),
                       categoryId: category.id,
                       categoryName: category.name,
-                      brand: draft.brand,
-                      unit: draft.unit,
+                      brand: draft.brand.trim(),
+                      unit: draft.unit.trim(),
                       price: Number(draft.price),
-                      oldPrice: draft.oldPrice ? Number(draft.oldPrice) : null,
-                      shortDescription: draft.shortDescription,
-                      description: draft.description,
+                      oldPrice: oldPrice ? Number(oldPrice) : null,
+                      shortDescription: draft.shortDescription.trim(),
+                      description: draft.description.trim(),
                       features: ["Admin managed", "Local demo data", "Portfolio-ready catalog"],
-                      image: draft.image,
-                      gallery: [draft.image, draft.image, draft.image],
+                      image,
+                      gallery: [image, image, image, image],
                       stockStatus: Number(draft.stockCount) < 15 ? "Low Stock" : "In Stock",
                       stockCount: Number(draft.stockCount),
                       rating: 4.7,
@@ -148,10 +192,11 @@ export default function AdminPage() {
                       isFeatured: true,
                       isNewArrival: draft.tag === "New",
                       isBestSeller: draft.tag === "Bestseller",
-                      isDiscounted: Boolean(draft.oldPrice),
+                      isDiscounted: Boolean(oldPrice),
                       popularity: 75,
-                      createdAt: new Date().toISOString(),
+                      createdAt: draft.id ? dashboard.products.find((item) => item.id === draft.id)?.createdAt ?? new Date().toISOString() : new Date().toISOString(),
                     };
+
                     await createOrUpdateProduct(product);
                     setDraft(emptyDraft);
                     setMessage("Product saved.");
@@ -178,18 +223,53 @@ export default function AdminPage() {
                       <option key={tag} value={tag}>{tag}</option>
                     ))}
                   </select>
-                  <button type="submit" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white md:col-span-2">Save product</button>
+                  <button type="submit" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white md:col-span-2">
+                    Save product
+                  </button>
                 </form>
-                <div className="mt-6 max-h-[360px] space-y-3 overflow-auto">
-                  {dashboard.products.slice(0, 8).map((product) => (
+
+                <div className="mt-6 max-h-[420px] space-y-3 overflow-auto">
+                  {visibleProducts.map((product) => (
                     <div key={product.id} className="flex items-center justify-between gap-4 rounded-[22px] border border-slate-200 p-4">
-                      <div>
+                      <div className="min-w-0">
                         <div className="font-semibold text-slate-950">{product.name}</div>
-                        <div className="text-sm text-slate-500">{product.categoryName} · ${product.price.toFixed(2)}</div>
+                        <div className="truncate text-sm text-slate-500">{product.categoryName} · ${product.price.toFixed(2)} · {product.stockStatus}</div>
                       </div>
                       <div className="flex gap-2">
-                        <button type="button" className="rounded-full border border-slate-200 px-3 py-2 text-sm" onClick={() => setDraft({ ...draft, id: product.id, name: product.name, slug: product.slug, categoryId: product.categoryId, categoryName: product.categoryName, brand: product.brand, unit: product.unit, price: String(product.price), oldPrice: product.oldPrice ? String(product.oldPrice) : "", shortDescription: product.shortDescription, description: product.description, image: product.image, stockCount: String(product.stockCount), tag: product.tag })}>Edit</button>
-                        <button type="button" className="rounded-full border border-rose-200 px-3 py-2 text-sm text-rose-600" onClick={async () => { await deleteProduct(product.id); setMessage("Product deleted."); await loadDashboard(); }}>Delete</button>
+                        <button
+                          type="button"
+                          className="rounded-full border border-slate-200 px-3 py-2 text-sm"
+                          onClick={() =>
+                            setDraft({
+                              id: product.id,
+                              name: product.name,
+                              slug: product.slug,
+                              categoryId: product.categoryId,
+                              brand: product.brand,
+                              unit: product.unit,
+                              price: String(product.price),
+                              oldPrice: product.oldPrice ? String(product.oldPrice) : "",
+                              shortDescription: product.shortDescription,
+                              description: product.description,
+                              image: product.image,
+                              stockCount: String(product.stockCount),
+                              tag: product.tag,
+                            })
+                          }
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-full border border-rose-200 px-3 py-2 text-sm text-rose-600"
+                          onClick={async () => {
+                            await deleteProduct(product.id);
+                            setMessage("Product deleted.");
+                            await loadDashboard();
+                          }}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -209,7 +289,14 @@ export default function AdminPage() {
                           <div className="font-semibold text-slate-950">{order.orderNumber}</div>
                           <div className="text-sm text-slate-500">{order.customerName} · ${order.total.toFixed(2)}</div>
                         </div>
-                        <select className="rounded-full border border-slate-200 px-3 py-2 text-sm" value={order.status} onChange={async (event) => { await updateOrderStatus(order.id, event.target.value as Order["status"]); await loadDashboard(); }}>
+                        <select
+                          className="rounded-full border border-slate-200 px-3 py-2 text-sm"
+                          value={order.status}
+                          onChange={async (event) => {
+                            await updateOrderStatus(order.id, event.target.value as Order["status"]);
+                            await loadDashboard();
+                          }}
+                        >
                           {["Pending", "Confirmed", "Packed", "Out for Delivery", "Delivered"].map((status) => (
                             <option key={status} value={status}>{status}</option>
                           ))}
@@ -287,6 +374,7 @@ export default function AdminPage() {
               </section>
             </div>
           </div>
+
           {message ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
         </div>
       </div>

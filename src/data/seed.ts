@@ -33,6 +33,17 @@ type CategorySeed = {
   }>;
 };
 
+function buildImageVariant(base: string, itemIndex: number, variantIndex: number) {
+  const separator = base.includes("?") ? "&" : "?";
+  const widths = [1200, 1020, 940, 860];
+  const heights = [900, 860, 820, 760];
+  const sats = [0, 6, 10, 14];
+  const exps = [0, 2, 6, 10];
+  const slot = (itemIndex + variantIndex) % widths.length;
+
+  return `${base}${separator}auto=format&fit=crop&w=${widths[slot]}&h=${heights[slot]}&q=82&sat=${sats[slot]}&exp=${exps[slot]}`;
+}
+
 const categorySeeds: CategorySeed[] = [
   {
     slug: "groceries",
@@ -308,7 +319,7 @@ export const mediaItems: MediaItem[] = [
   {
     id: "media-promo",
     title: "Weekly Offers Preview",
-    description: "A campaign-style highlight reel of this week’s seasonal offers, family bundles, and kitchen essentials.",
+    description: "A campaign-style highlight reel of this week's seasonal offers, family bundles, and kitchen essentials.",
     thumbnail: "https://images.unsplash.com/photo-1601599561213-832382fd07ba?auto=format&fit=crop&w=1200&q=80",
     duration: "01:42",
   },
@@ -383,8 +394,13 @@ export function createSeedProducts(categories = createSeedCategories()): Product
         shortDescription: `${titleFromTag(item.tag)} in ${category.name.toLowerCase()} for reliable weekly shopping.`,
         description: `${item.name} is part of our ${category.name.toLowerCase()} selection, curated for consistency, shelf appeal, and dependable home use. ${categorySeed.description}`,
         features: categorySeed.features,
-        image: categorySeed.heroImage,
-        gallery: [categorySeed.heroImage, categorySeed.heroImage, categorySeed.heroImage],
+        image: buildImageVariant(categorySeed.heroImage, itemIndex, 0),
+        gallery: [
+          buildImageVariant(categorySeed.heroImage, itemIndex, 0),
+          buildImageVariant(categorySeed.heroImage, itemIndex, 1),
+          buildImageVariant(categorySeed.heroImage, itemIndex, 2),
+          buildImageVariant(categorySeed.heroImage, itemIndex, 3),
+        ],
         stockStatus: item.stockCount <= 0 ? "Out of Stock" : item.stockCount < 15 ? "Low Stock" : "In Stock",
         stockCount: item.stockCount,
         rating: item.rating,
