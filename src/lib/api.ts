@@ -1,429 +1,267 @@
-export type ReviewItem = {
-  id: string;
-  name: string;
-  role: string;
-  rating: number;
-  quote: string;
-  avatar: string;
-  createdAt: string;
-};
+import { createInitialStore } from "../data/seed";
+import type {
+  AuthUser,
+  Category,
+  DashboardMetrics,
+  Order,
+  Product,
+  Review,
+  StoreDb,
+  SupportInquiry,
+  User,
+} from "../types";
 
-export type ReservationItem = {
-  id: string;
-  fullName: string;
-  phone: string;
-  email: string;
-  guests: number;
-  date: string;
-  time: string;
-  seating: string;
-  occasion: string;
-  specialRequests: string;
-  status: string;
-  createdAt: string;
-};
-
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-export type AdminUser = AuthUser & {
-  password: string;
-  status: "Active" | "Suspended";
-  createdAt: string;
-  lastLoginAt: string | null;
-};
-
-type DemoDb = {
-  users: AdminUser[];
-  reviews: ReviewItem[];
-  reservations: ReservationItem[];
-};
-
-const STORAGE_KEY = "digitquo-demo-db";
-
-const seededReviews: ReviewItem[] = [
-  {
-    id: "review-seed-1",
-    name: "Aarav Mehta",
-    role: "Private Banking Director",
-    rating: 5,
-    quote: "The design, service, and reservation experience all feel five-star. This is exactly how a modern restaurant brand should present itself online.",
-    avatar: "AM",
-    createdAt: "2026-03-18T19:30:00.000Z",
-  },
-  {
-    id: "review-seed-2",
-    name: "Riya Kapoor",
-    role: "Lifestyle Editor",
-    rating: 5,
-    quote: "Elegant, bright, and beautifully paced. The digital experience mirrors the atmosphere of a truly premium dining room.",
-    avatar: "RK",
-    createdAt: "2026-03-17T18:10:00.000Z",
-  },
-  {
-    id: "review-seed-3",
-    name: "Nikhil Shah",
-    role: "Founder, Atelier Events",
-    rating: 4,
-    quote: "Private dining and event inquiries feel especially polished. It builds trust the moment you land on the site.",
-    avatar: "NS",
-    createdAt: "2026-03-16T17:05:00.000Z",
-  },
-];
-
-const initialDb: DemoDb = {
-  users: [
-    {
-      id: "user-seed-1",
-      name: "Demo Member",
-      email: "member@maisonember.com",
-      password: "member123",
-      status: "Active",
-      createdAt: "2026-03-10T10:00:00.000Z",
-      lastLoginAt: null,
-    },
-  ],
-  reviews: seededReviews,
-  reservations: [],
-};
+const STORAGE_KEY = "megamart-enterprise-store";
 
 function isBrowser() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 function createId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function normalizeUsers(users: unknown): AdminUser[] {
-  if (!Array.isArray(users)) {
-    return structuredClone(initialDb.users);
-  }
+function readDb(): StoreDb {
+  const initial = createInitialStore();
 
-  return users.map((item) => {
-    const user = item as Partial<AdminUser>;
-    return {
-      id: String(user.id ?? createId("user")),
-      name: String(user.name ?? "Member"),
-      email: String(user.email ?? ""),
-      password: String(user.password ?? "member123"),
-      status: user.status === "Suspended" ? "Suspended" : "Active",
-      createdAt: String(user.createdAt ?? new Date().toISOString()),
-      lastLoginAt: user.lastLoginAt ? String(user.lastLoginAt) : null,
-    };
-  });
-}
-
-function readLocalDb(): DemoDb {
   if (!isBrowser()) {
-    return structuredClone(initialDb);
+    return clone(initial);
   }
 
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initialDb));
-    return structuredClone(initialDb);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+    return clone(initial);
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<DemoDb>;
-    const db: DemoDb = {
-      users: normalizeUsers(parsed.users),
-      reviews: Array.isArray(parsed.reviews) && parsed.reviews.length > 0 ? parsed.reviews : structuredClone(initialDb.reviews),
-      reservations: Array.isArray(parsed.reservations) ? parsed.reservations : [],
+    const parsed = JSON.parse(raw) as Partial<StoreDb>;
+    const next: StoreDb = {
+      ...initial,
+      ...parsed,
+      categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : initial.categories,
+      products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : initial.products,
+      reviews: Array.isArray(parsed.reviews) ? parsed.reviews : initial.reviews,
+      testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : initial.testimonials,
+      inquiries: Array.isArray(parsed.inquiries) ? parsed.inquiries : initial.inquiries,
+      orders: Array.isArray(parsed.orders) ? parsed.orders : initial.orders,
+      users: Array.isArray(parsed.users) ? parsed.users : initial.users,
+      hours: Array.isArray(parsed.hours) ? parsed.hours : initial.hours,
+      media: Array.isArray(parsed.media) ? parsed.media : initial.media,
+      faqs: Array.isArray(parsed.faqs) ? parsed.faqs : initial.faqs,
     };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-    return db;
+    writeDb(next);
+    return clone(next);
   } catch {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initialDb));
-    return structuredClone(initialDb);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+    return clone(initial);
   }
 }
 
-function writeLocalDb(data: DemoDb) {
+function writeDb(data: StoreDb) {
   if (!isBrowser()) {
     return;
   }
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function toAuthUser(user: AdminUser): AuthUser {
-  return { id: user.id, name: user.name, email: user.email };
+function sanitizeUser(user: User): AuthUser {
+  const { password: _password, ...safe } = user;
+  return safe;
 }
 
-function isApiUnavailableError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
-  const message = error.message.toLowerCase();
-  return (
-    message.includes("local app server api was not found") ||
-    message.includes("shared storage is not configured") ||
-    message.includes("failed to fetch") ||
-    message.includes("load failed") ||
-    message.includes("networkerror")
-  );
+export function resetStore() {
+  const fresh = createInitialStore();
+  writeDb(fresh);
+  return fresh;
 }
 
-async function requestJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
-
-  if (!response.ok) {
-    const contentType = response.headers.get("content-type") ?? "";
-    const text = await response.text();
-
-    if (response.status === 404) {
-      throw new Error("The local app server API was not found.");
-    }
-
-    if (contentType.includes("application/json")) {
-      let parsedMessage = "";
-      try {
-        parsedMessage = (JSON.parse(text) as { message?: string }).message ?? "";
-      } catch {
-        parsedMessage = "";
-      }
-      throw new Error(parsedMessage || text || "Request failed.");
-    }
-
-    throw new Error(text || "Request failed.");
-  }
-
-  return response.json() as Promise<T>;
+export async function getStoreData() {
+  return readDb();
 }
 
-export async function loginUser(payload: { email: string; password: string }) {
-  try {
-    return await requestJson<AuthUser>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+export async function getCategories() {
+  return readDb().categories;
+}
 
-    const db = readLocalDb();
-    const email = payload.email.trim().toLowerCase();
-    const user = db.users.find((item) => item.email.toLowerCase() === email && item.password === payload.password);
-    if (!user) {
-      throw new Error("No registered account matched those login details.");
-    }
-    if (user.status === "Suspended") {
-      throw new Error("This account has been suspended. Contact the administrator.");
-    }
-    user.lastLoginAt = new Date().toISOString();
-    writeLocalDb(db);
-    return toAuthUser(user);
+export async function getProducts() {
+  return readDb().products;
+}
+
+export async function getProductBySlug(slug: string) {
+  const db = readDb();
+  return db.products.find((product) => product.slug === slug) ?? null;
+}
+
+export async function getProductReviews(productId: string) {
+  return readDb()
+    .reviews
+    .filter((review) => review.productId === productId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function createReview(payload: { productId: string; name: string; rating: number; title: string; text: string }) {
+  const db = readDb();
+  const review: Review = {
+    id: createId("review"),
+    productId: payload.productId,
+    name: payload.name.trim(),
+    rating: payload.rating,
+    title: payload.title.trim(),
+    text: payload.text.trim(),
+    createdAt: new Date().toISOString(),
+    verified: false,
+  };
+
+  db.reviews.unshift(review);
+
+  const product = db.products.find((item) => item.id === payload.productId);
+  if (product) {
+    const totalScore = product.rating * product.reviewCount + payload.rating;
+    product.reviewCount += 1;
+    product.rating = Number((totalScore / product.reviewCount).toFixed(1));
   }
+
+  writeDb(db);
+  return review;
 }
 
 export async function signupUser(payload: { name: string; email: string; password: string }) {
-  try {
-    return await requestJson<AuthUser>("/api/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+  const db = readDb();
+  const email = payload.email.trim().toLowerCase();
 
-    const db = readLocalDb();
-    const email = payload.email.trim().toLowerCase();
-    const exists = db.users.some((item) => item.email.toLowerCase() === email);
-    if (exists) {
-      throw new Error("An account with this email already exists.");
-    }
-
-    const user: AdminUser = {
-      id: createId("user"),
-      name: payload.name.trim(),
-      email,
-      password: payload.password,
-      status: "Active",
-      createdAt: new Date().toISOString(),
-      lastLoginAt: null,
-    };
-    db.users.unshift(user);
-    writeLocalDb(db);
-    return toAuthUser(user);
+  if (db.users.some((item) => item.email.toLowerCase() === email)) {
+    throw new Error("An account with this email already exists.");
   }
+
+  const user: User = {
+    id: createId("user"),
+    name: payload.name.trim(),
+    email,
+    password: payload.password,
+    role: "customer",
+    createdAt: new Date().toISOString(),
+    lastLoginAt: null,
+  };
+
+  db.users.unshift(user);
+  writeDb(db);
+  return sanitizeUser(user);
 }
 
-export async function getReviews() {
-  try {
-    return await requestJson<ReviewItem[]>("/api/reviews");
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+export async function loginUser(payload: { email: string; password: string }) {
+  const db = readDb();
+  const email = payload.email.trim().toLowerCase();
+  const user = db.users.find((item) => item.email.toLowerCase() === email && item.password === payload.password);
 
-    const db = readLocalDb();
-    return [...db.reviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  if (!user) {
+    throw new Error("No account matched those login details.");
   }
+
+  user.lastLoginAt = new Date().toISOString();
+  writeDb(db);
+  return sanitizeUser(user);
 }
 
-export async function createReview(payload: { name: string; role: string; rating: number; quote: string }) {
-  try {
-    return await requestJson<ReviewItem>("/api/reviews", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+export async function submitInquiry(payload: Omit<SupportInquiry, "id" | "createdAt" | "status">) {
+  const db = readDb();
+  const inquiry: SupportInquiry = {
+    id: createId("inquiry"),
+    ...payload,
+    name: payload.name.trim(),
+    email: payload.email.trim(),
+    phone: payload.phone.trim(),
+    subject: payload.subject.trim(),
+    message: payload.message.trim(),
+    createdAt: new Date().toISOString(),
+    status: "New",
+  };
 
-    const db = readLocalDb();
-    const review: ReviewItem = {
-      id: createId("review"),
-      name: payload.name.trim(),
-      role: payload.role.trim() || "Verified guest",
-      rating: Number(payload.rating),
-      quote: payload.quote.trim(),
-      avatar: payload.name.trim().split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "GU",
-      createdAt: new Date().toISOString(),
-    };
-    db.reviews.unshift(review);
-    writeLocalDb(db);
-    return review;
-  }
+  db.inquiries.unshift(inquiry);
+  writeDb(db);
+  return {
+    inquiry,
+    mailPreview: `Support request captured locally for ${inquiry.email}. Subject: ${inquiry.subject}`,
+  };
 }
 
-export async function createReservation(payload: Omit<ReservationItem, "id" | "status" | "createdAt">) {
-  try {
-    return await requestJson<ReservationItem>("/api/reservations", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+export async function createOrder(payload: Omit<Order, "id" | "orderNumber" | "createdAt" | "status">) {
+  const db = readDb();
+  const order: Order = {
+    ...payload,
+    id: createId("order"),
+    orderNumber: `MM-${new Date().toISOString().slice(2, 10).replace(/-/g, "")}-${Math.floor(1000 + Math.random() * 9000)}`,
+    createdAt: new Date().toISOString(),
+    status: "Pending",
+  };
 
-    const db = readLocalDb();
-    const reservation: ReservationItem = {
-      id: createId("reservation"),
-      fullName: payload.fullName.trim(),
-      phone: payload.phone.trim(),
-      email: payload.email.trim(),
-      guests: Number(payload.guests),
-      date: payload.date,
-      time: payload.time,
-      seating: payload.seating,
-      occasion: payload.occasion,
-      specialRequests: payload.specialRequests.trim(),
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-    };
-    db.reservations.unshift(reservation);
-    writeLocalDb(db);
-    return reservation;
-  }
+  db.orders.unshift(order);
+  writeDb(db);
+  return order;
 }
 
 export async function getAdminDashboard() {
-  try {
-    return await requestJson<{ reservations: ReservationItem[]; reviews: ReviewItem[]; users: AdminUser[] }>("/api/admin/dashboard");
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+  const db = readDb();
+  const metrics: DashboardMetrics = {
+    totalRevenue: Number(db.orders.reduce((sum, order) => sum + order.total, 0).toFixed(2)),
+    totalOrders: db.orders.length,
+    totalCustomers: db.users.filter((user) => user.role === "customer").length,
+    pendingOrders: db.orders.filter((order) => order.status === "Pending").length,
+    lowStockProducts: db.products.filter((product) => product.stockCount < 15).length,
+    averageRating: Number((db.products.reduce((sum, product) => sum + product.rating, 0) / db.products.length).toFixed(1)),
+  };
 
-    const db = readLocalDb();
-    return {
-      reservations: [...db.reservations].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-      reviews: [...db.reviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-      users: [...db.users],
-    };
-  }
+  return { ...db, metrics };
 }
 
-export async function updateReservationStatus(id: string, status: string) {
-  try {
-    return await requestJson<ReservationItem>(`/api/admin/reservations/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
+export async function createOrUpdateProduct(payload: Product) {
+  const db = readDb();
+  const index = db.products.findIndex((product) => product.id === payload.id);
 
-    const db = readLocalDb();
-    const reservation = db.reservations.find((item) => item.id === id);
-    if (!reservation) {
-      throw new Error("Reservation not found.");
-    }
-    reservation.status = status;
-    writeLocalDb(db);
-    return reservation;
+  if (index >= 0) {
+    db.products[index] = payload;
+  } else {
+    db.products.unshift({ ...payload, id: createId("product") });
   }
+
+  writeDb(db);
+  return payload;
 }
 
-export async function updateUserStatus(id: string, status: AdminUser["status"]) {
-  try {
-    return await requestJson<AdminUser>(`/api/admin/users/${id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
-
-    const db = readLocalDb();
-    const user = db.users.find((item) => item.id === id);
-    if (!user) {
-      throw new Error("User not found.");
-    }
-    user.status = status;
-    writeLocalDb(db);
-    return user;
-  }
+export async function deleteProduct(productId: string) {
+  const db = readDb();
+  db.products = db.products.filter((product) => product.id !== productId);
+  db.reviews = db.reviews.filter((review) => review.productId !== productId);
+  writeDb(db);
+  return { ok: true as const };
 }
 
-export async function deleteUser(id: string) {
-  try {
-    return await requestJson<{ ok: true }>(`/api/admin/users/${id}`, {
-      method: "DELETE",
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
-
-    const db = readLocalDb();
-    db.users = db.users.filter((item) => item.id !== id);
-    writeLocalDb(db);
-    return { ok: true as const };
-  }
+export async function createCategory(payload: Omit<Category, "id">) {
+  const db = readDb();
+  const category: Category = { ...payload, id: createId("category") };
+  db.categories.unshift(category);
+  writeDb(db);
+  return category;
 }
 
-export async function deleteReview(id: string) {
-  try {
-    return await requestJson<{ ok: true }>(`/api/admin/reviews/${id}`, {
-      method: "DELETE",
-    });
-  } catch (error) {
-    if (!isApiUnavailableError(error)) {
-      throw error;
-    }
-
-    const db = readLocalDb();
-    db.reviews = db.reviews.filter((item) => item.id !== id);
-    writeLocalDb(db);
-    return { ok: true as const };
+export async function updateOrderStatus(orderId: string, status: Order["status"]) {
+  const db = readDb();
+  const order = db.orders.find((item) => item.id === orderId);
+  if (!order) {
+    throw new Error("Order not found.");
   }
+  order.status = status;
+  writeDb(db);
+  return order;
+}
+
+export async function getRelatedProducts(categoryId: string, exceptId: string) {
+  return readDb()
+    .products
+    .filter((product) => product.categoryId === categoryId && product.id !== exceptId)
+    .slice(0, 4);
 }

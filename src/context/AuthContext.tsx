@@ -1,5 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { loginUser, signupUser, type AuthUser } from "../lib/api";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { loginUser, signupUser } from "../lib/api";
+import type { AuthUser } from "../types";
 
 type LoginPayload = {
   email: string;
@@ -21,60 +22,93 @@ type AuthResult = {
 type AuthContextValue = {
   user: AuthUser | null;
   isLoggedIn: boolean;
+  isAdmin: boolean;
   login: (payload: LoginPayload) => Promise<AuthResult>;
   signup: (payload: SignupPayload) => Promise<AuthResult>;
   logout: () => void;
 };
 
+const STORAGE_KEY = "megamart-auth-user";
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      isLoggedIn: Boolean(user),
-      login: async ({ email, password }) => {
-        if (!email || !password) {
-          return { ok: false, message: "Please enter both email and password." };
-        }
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      setUser(JSON.parse(raw) as AuthUser);
+    } catch {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
 
-        try {
-          const nextUser = await loginUser({ email, password });
-          setUser(nextUser);
-          return { ok: true };
-        } catch (error) {
-          return { ok: false, message: error instanceof Error ? error.message : "Login failed." };
-        }
-      },
-      signup: async ({ name, email, password, confirmPassword }) => {
-        if (!name || !email || !password || !confirmPassword) {
-          return { ok: false, message: "Please complete all fields to create your account." };
-        }
+  const persistUser = (nextUser: AuthUser | null) => {
+    setUser(nextUser);
+    if (typeof window === "undefined") {
+      return;
+    }
 
-        if (password.length < 6) {
-          return { ok: false, message: "Use at least 6 characters for a more secure password." };
-        }
+    if (nextUser) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
+      return;
+    }
 
-        if (password !== confirmPassword) {
-          return { ok: false, message: "Password and confirm password must match." };
-        }
+    window.localStorage.removeItem(STORAGE_KEY);
+  };
 
-        try {
-          const nextUser = await signupUser({ name, email, password });
-          setUser(nextUser);
-          return { ok: true };
-        } catch (error) {
-          return { ok: false, message: error instanceof Error ? error.message : "Signup failed." };
-        }
-      },
-      logout: () => setUser(null),
-    }),
-    [user]
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn: Boolean(user),
+        isAdmin: user?.role === "admin",
+        login: async ({ email, password }) => {
+          if (!email || !password) {
+            return { ok: false, message: "Enter both email and password." };
+          }
+
+          try {
+            const nextUser = await loginUser({ email, password });
+            persistUser(nextUser);
+            return { ok: true };
+          } catch (error) {
+            return { ok: false, message: error instanceof Error ? error.message : "Login failed." };
+          }
+        },
+        signup: async ({ name, email, password, confirmPassword }) => {
+          if (!name || !email || !password || !confirmPassword) {
+            return { ok: false, message: "Complete all fields to create an account." };
+          }
+
+          if (password.length < 6) {
+            return { ok: false, message: "Use at least 6 characters for your password." };
+          }
+
+          if (password !== confirmPassword) {
+            return { ok: false, message: "Password and confirm password must match." };
+          }
+
+          try {
+            const nextUser = await signupUser({ name, email, password });
+            persistUser(nextUser);
+            return { ok: true };
+          } catch (error) {
+            return { ok: false, message: error instanceof Error ? error.message : "Signup failed." };
+          }
+        },
+        logout: () => persistUser(null),
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

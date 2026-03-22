@@ -1,308 +1,295 @@
-import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
-import MotionBlock from "../components/common/MotionBlock";
-import SectionIntro from "../components/common/SectionIntro";
-import {
-  deleteReview,
-  deleteUser,
-  getAdminDashboard,
-  updateReservationStatus,
-  updateUserStatus,
-  type AdminUser,
-  type ReservationItem,
-  type ReviewItem,
-} from "../lib/api";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { createCategory, createOrUpdateProduct, deleteProduct, getAdminDashboard, resetStore, updateOrderStatus } from "../lib/api";
+import type { Category, Order, Product, Review, SupportInquiry } from "../types";
 
-const ADMIN_EMAIL = "adminaccess@digitquo.com";
-const ADMIN_PASSWORD = "giveadminaccess@digitquo";
-const STORAGE_KEY = "digitquo-admin-session";
+type DashboardState = {
+  categories: Category[];
+  products: Product[];
+  reviews: Review[];
+  inquiries: SupportInquiry[];
+  orders: Order[];
+  users: Array<{ id: string; name: string; email: string; role: string }>;
+  metrics: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalCustomers: number;
+    pendingOrders: number;
+    lowStockProducts: number;
+    averageRating: number;
+  };
+};
+
+const emptyDraft = {
+  id: "",
+  name: "",
+  slug: "",
+  categoryId: "",
+  categoryName: "",
+  brand: "",
+  unit: "",
+  price: "0",
+  oldPrice: "",
+  shortDescription: "",
+  description: "",
+  image: "",
+  stockCount: "10",
+  tag: "New",
+};
 
 export default function AdminPage() {
-  const [authorized, setAuthorized] = useState(() => sessionStorage.getItem(STORAGE_KEY) === "active");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [userQuery, setUserQuery] = useState("");
-  const [reservations, setReservations] = useState<ReservationItem[]>([]);
-  const [reviews, setReviews] = useState<ReviewItem[]>([]);
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const { isAdmin, user } = useAuth();
+  const [dashboard, setDashboard] = useState<DashboardState | null>(null);
+  const [draft, setDraft] = useState(emptyDraft);
+  const [message, setMessage] = useState("");
+
+  const loadDashboard = async () => {
+    const next = await getAdminDashboard();
+    setDashboard(next as DashboardState);
+  };
 
   useEffect(() => {
-    if (!authorized) {
-      return;
-    }
-
-    let active = true;
-    async function loadDashboard() {
-      try {
-        setLoading(true);
-        const data = await getAdminDashboard();
-        if (active) {
-          setReservations(data.reservations);
-          setReviews(data.reviews);
-          setUsers(data.users);
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
-
     void loadDashboard();
-    return () => {
-      active = false;
-    };
-  }, [authorized]);
+  }, []);
 
-  const totals = useMemo(
-    () => ({
-      reservations: reservations.length,
-      pending: reservations.filter((item) => item.status === "Pending").length,
-      reviews: reviews.length,
-      users: users.length,
-      suspended: users.filter((item) => item.status === "Suspended").length,
-      activeUsers: users.filter((item) => item.status === "Active").length,
-    }),
-    [reservations, reviews, users]
-  );
-
-  const filteredUsers = useMemo(() => {
-    const query = userQuery.trim().toLowerCase();
-    if (!query) {
-      return users;
-    }
-    return users.filter((user) => user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query) || user.id.toLowerCase().includes(query));
-  }, [users, userQuery]);
-
-  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, "active");
-      setAuthorized(true);
-      setError("");
-      return;
-    }
-    setError("Use the configured admin credentials to access the dashboard.");
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setAuthorized(false);
-    setEmail("");
-    setPassword("");
-    setShowPassword(false);
-  };
-
-  const handleStatusChange = async (id: string, status: string) => {
-    const updated = await updateReservationStatus(id, status);
-    setReservations((current) => current.map((item) => (item.id === id ? updated : item)));
-  };
-
-  const handleDeleteReview = async (id: string) => {
-    await deleteReview(id);
-    setReviews((current) => current.filter((item) => item.id !== id));
-  };
-
-  const handleUserStatusToggle = async (user: AdminUser) => {
-    const nextStatus = user.status === "Active" ? "Suspended" : "Active";
-    const updated = await updateUserStatus(user.id, nextStatus);
-    setUsers((current) => current.map((item) => (item.id === user.id ? updated : item)));
-  };
-
-  const handleDeleteUser = async (userId: string) => {
-    await deleteUser(userId);
-    setUsers((current) => current.filter((item) => item.id !== userId));
-  };
-
-  if (!authorized) {
+  if (!user || !isAdmin) {
     return (
-      <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
-        <div className="mx-auto max-w-lg rounded-[2.5rem] border border-white/70 bg-white/90 p-8 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-10">
-          <SectionIntro eyebrow="Admin Panel" title="Built-in dashboard access for reservations, reviews, and users." description="This admin panel is included inside the project and reads the same local JSON data used by the public site." align="center" />
-          <form className="mt-8 grid gap-5" onSubmit={handleLogin}>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-stone-700">Admin Email</label>
-              <input className="form-input" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="adminaccess@digitquo.com" />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-stone-700">Password</label>
-              <div className="relative">
-                <input className="form-input pr-24" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter admin password" />
-                <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <button type="submit" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">Open dashboard</button>
-          </form>
-          <div className="mt-6 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4 text-sm leading-7 text-stone-600">
-            Admin email: <strong>{ADMIN_EMAIL}</strong><br />Password: <strong>{ADMIN_PASSWORD}</strong>
-          </div>
-          {error ? <div className="mt-4 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{error}</div> : null}
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6">
+        <div className="rounded-[36px] bg-white p-10 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+          <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">Admin Login</div>
+          <h1 className="mt-4 font-display text-4xl text-slate-950">Restricted admin area</h1>
+          <p className="mt-4 text-base leading-8 text-slate-600">Sign in with `admin@megamart.com` and password `admin123` to access the dashboard.</p>
+          <Link to="/login" className="mt-6 inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white">Go to login</Link>
         </div>
-      </section>
+      </div>
     );
   }
 
+  if (!dashboard) {
+    return <div className="px-4 py-24 text-center text-slate-500">Loading admin dashboard...</div>;
+  }
+
   return (
-    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <SectionIntro eyebrow="Admin Panel" title="Manage reservations, reviews, and users from one built-in dashboard." description="Everything below is powered by the project's own local data with no external service required." />
-        <button type="button" onClick={handleLogout} className="rounded-full border border-stone-200 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-amber-300 hover:bg-amber-50">Logout</button>
-      </div>
-
-      <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Reservations" value={String(totals.reservations)} />
-        <StatCard label="Pending" value={String(totals.pending)} />
-        <StatCard label="Reviews" value={String(totals.reviews)} />
-        <StatCard label="Users" value={String(totals.users)} />
-        <StatCard label="Active Users" value={String(totals.activeUsers)} />
-        <StatCard label="Suspended" value={String(totals.suspended)} />
-      </div>
-
-      <div className="mt-10 grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
-        <MotionBlock className="rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-stone-900">Reservations</h2>
-              <p className="mt-2 text-sm leading-7 text-stone-600">Update status for every booking request submitted through the public reservation form.</p>
-            </div>
-            <div className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800">Priority queue: {totals.pending}</div>
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+        <aside className="rounded-[32px] bg-slate-950 p-6 text-white">
+          <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-200">Admin Panel</div>
+          <div className="mt-4 text-2xl font-semibold">{user.name}</div>
+          <div className="mt-1 text-sm text-slate-300">{user.email}</div>
+          <div className="mt-8 grid gap-3 text-sm">
+            {["Overview", "Products", "Categories", "Orders", "Reviews", "Inquiries"].map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">{item}</div>
+            ))}
           </div>
-          <div className="mt-6 grid gap-4">
-            {loading ? <p className="text-sm text-stone-500">Loading reservations...</p> : null}
-            {!loading && reservations.length === 0 ? <p className="text-sm text-stone-500">No reservations have been submitted yet.</p> : null}
-            {reservations.map((reservation) => (
-              <div key={reservation.id} className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-stone-900">{reservation.fullName}</h3>
-                    <p className="mt-1 text-sm text-stone-500">{reservation.date} at {reservation.time} for {reservation.guests} guests</p>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">{reservation.email} | {reservation.phone}</p>
-                    <p className="text-sm leading-7 text-stone-600">{reservation.seating} | {reservation.occasion}</p>
-                    {reservation.specialRequests ? <p className="mt-2 text-sm leading-7 text-stone-600">{reservation.specialRequests}</p> : null}
-                  </div>
-                  <select className="form-input max-w-[12rem]" value={reservation.status} onChange={(event) => void handleStatusChange(reservation.id, event.target.value)}>
-                    <option>Pending</option>
-                    <option>Confirmed</option>
-                    <option>Completed</option>
-                    <option>Cancelled</option>
+          <button
+            type="button"
+            className="mt-8 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950"
+            onClick={() => {
+              resetStore();
+              void loadDashboard();
+              setMessage("Store reset to seeded local data.");
+            }}
+          >
+            Reset demo data
+          </button>
+        </aside>
+
+        <div className="space-y-8">
+          <div className="grid gap-5 md:grid-cols-3 xl:grid-cols-6">
+            {[
+              ["Revenue", `$${dashboard.metrics.totalRevenue.toFixed(2)}`],
+              ["Orders", String(dashboard.metrics.totalOrders)],
+              ["Customers", String(dashboard.metrics.totalCustomers)],
+              ["Pending", String(dashboard.metrics.pendingOrders)],
+              ["Low stock", String(dashboard.metrics.lowStockProducts)],
+              ["Avg rating", dashboard.metrics.averageRating.toFixed(1)],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-[28px] bg-white p-5 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <div className="text-sm uppercase tracking-[0.24em] text-slate-500">{label}</div>
+                <div className="mt-3 text-3xl font-semibold text-slate-950">{value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
+            <div className="space-y-8">
+              <section className="rounded-[32px] bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-xl font-semibold text-slate-950">Product management</h2>
+                  <div className="text-sm text-slate-500">{dashboard.products.length} products</div>
+                </div>
+                <form
+                  className="mt-6 grid gap-4 md:grid-cols-2"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    const category = dashboard.categories.find((item) => item.id === draft.categoryId) ?? dashboard.categories[0];
+                    const product: Product = {
+                      id: draft.id || `product-${Date.now()}`,
+                      slug: draft.slug || draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+                      name: draft.name,
+                      categoryId: category.id,
+                      categoryName: category.name,
+                      brand: draft.brand,
+                      unit: draft.unit,
+                      price: Number(draft.price),
+                      oldPrice: draft.oldPrice ? Number(draft.oldPrice) : null,
+                      shortDescription: draft.shortDescription,
+                      description: draft.description,
+                      features: ["Admin managed", "Local demo data", "Portfolio-ready catalog"],
+                      image: draft.image,
+                      gallery: [draft.image, draft.image, draft.image],
+                      stockStatus: Number(draft.stockCount) < 15 ? "Low Stock" : "In Stock",
+                      stockCount: Number(draft.stockCount),
+                      rating: 4.7,
+                      reviewCount: 24,
+                      sku: `${category.slug.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-3)}`,
+                      tag: draft.tag as Product["tag"],
+                      isFeatured: true,
+                      isNewArrival: draft.tag === "New",
+                      isBestSeller: draft.tag === "Bestseller",
+                      isDiscounted: Boolean(draft.oldPrice),
+                      popularity: 75,
+                      createdAt: new Date().toISOString(),
+                    };
+                    await createOrUpdateProduct(product);
+                    setDraft(emptyDraft);
+                    setMessage("Product saved.");
+                    await loadDashboard();
+                  }}
+                >
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Product name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
+                  <select className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={draft.categoryId} onChange={(event) => setDraft((current) => ({ ...current, categoryId: event.target.value }))}>
+                    <option value="">Select category</option>
+                    {dashboard.categories.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
                   </select>
-                </div>
-              </div>
-            ))}
-          </div>
-        </MotionBlock>
-
-        <MotionBlock className="rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-          <h2 className="text-2xl font-semibold text-stone-900">Reviews</h2>
-          <p className="mt-2 text-sm leading-7 text-stone-600">Moderate public reviews submitted through the live site.</p>
-          <div className="mt-6 grid gap-4">
-            {loading ? <p className="text-sm text-stone-500">Loading reviews...</p> : null}
-            {!loading && reviews.length === 0 ? <p className="text-sm text-stone-500">No reviews have been submitted yet.</p> : null}
-            {reviews.map((review) => (
-              <div key={review.id} className="rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-stone-900">{review.name}</h3>
-                    <p className="mt-1 text-sm text-stone-500">{review.role} | {review.rating}/5</p>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">{review.quote}</p>
-                  </div>
-                  <button type="button" onClick={() => void handleDeleteReview(review.id)} className="rounded-full border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50">Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </MotionBlock>
-      </div>
-
-      <MotionBlock className="mt-8 rounded-[2.25rem] border border-white/70 bg-white/90 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-stone-900">Users</h2>
-            <p className="mt-2 text-sm leading-7 text-stone-600">Suspend, reactivate, search, and remove accounts from one place.</p>
-          </div>
-          <div className="w-full max-w-sm">
-            <input className="form-input" value={userQuery} onChange={(event) => setUserQuery(event.target.value)} placeholder="Search by name, email, or user ID" />
-          </div>
-        </div>
-
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm text-stone-700">
-            <thead>
-              <tr className="text-xs uppercase tracking-[0.2em] text-stone-500">
-                <th className="px-4">User</th>
-                <th className="px-4">Status</th>
-                <th className="px-4">Password</th>
-                <th className="px-4">Created</th>
-                <th className="px-4">Last Login</th>
-                <th className="px-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td className="px-4 py-3 text-stone-500" colSpan={6}>Loading users...</td></tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr><td className="px-4 py-3 text-stone-500" colSpan={6}>No matching users found.</td></tr>
-              ) : (
-                filteredUsers.map((account) => (
-                  <tr key={account.id} className="rounded-2xl bg-stone-50">
-                    <td className="rounded-l-2xl px-4 py-4 align-top">
-                      <p className="font-semibold text-stone-900">{account.name}</p>
-                      <p className="mt-1 text-stone-600">{account.email}</p>
-                      <p className="mt-1 text-xs text-stone-400">{account.id}</p>
-                    </td>
-                    <td className="px-4 py-4 align-top">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${account.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>
-                        {account.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 align-top">{account.password}</td>
-                    <td className="px-4 py-4 align-top text-stone-600">{formatDate(account.createdAt)}</td>
-                    <td className="px-4 py-4 align-top text-stone-600">{account.lastLoginAt ? formatDate(account.lastLoginAt) : "Never"}</td>
-                    <td className="rounded-r-2xl px-4 py-4 align-top">
-                      <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => void handleUserStatusToggle(account)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${account.status === "Active" ? "border border-amber-200 text-amber-800 hover:bg-amber-50" : "border border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}>
-                          {account.status === "Active" ? "Suspend" : "Reactivate"}
-                        </button>
-                        <button type="button" onClick={() => void handleDeleteUser(account.id)} className="rounded-full border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">
-                          Delete
-                        </button>
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Brand" value={draft.brand} onChange={(event) => setDraft((current) => ({ ...current, brand: event.target.value }))} />
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Unit" value={draft.unit} onChange={(event) => setDraft((current) => ({ ...current, unit: event.target.value }))} />
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Price" value={draft.price} onChange={(event) => setDraft((current) => ({ ...current, price: event.target.value }))} />
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Old price" value={draft.oldPrice} onChange={(event) => setDraft((current) => ({ ...current, oldPrice: event.target.value }))} />
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm md:col-span-2" placeholder="Image URL" value={draft.image} onChange={(event) => setDraft((current) => ({ ...current, image: event.target.value }))} />
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm md:col-span-2" placeholder="Short description" value={draft.shortDescription} onChange={(event) => setDraft((current) => ({ ...current, shortDescription: event.target.value }))} />
+                  <textarea className="rounded-2xl border border-slate-200 px-4 py-3 text-sm md:col-span-2" rows={4} placeholder="Description" value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} />
+                  <input className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Stock count" value={draft.stockCount} onChange={(event) => setDraft((current) => ({ ...current, stockCount: event.target.value }))} />
+                  <select className="rounded-2xl border border-slate-200 px-4 py-3 text-sm" value={draft.tag} onChange={(event) => setDraft((current) => ({ ...current, tag: event.target.value }))}>
+                    {["New", "Bestseller", "Discount", "Popular"].map((tag) => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                  <button type="submit" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white md:col-span-2">Save product</button>
+                </form>
+                <div className="mt-6 max-h-[360px] space-y-3 overflow-auto">
+                  {dashboard.products.slice(0, 8).map((product) => (
+                    <div key={product.id} className="flex items-center justify-between gap-4 rounded-[22px] border border-slate-200 p-4">
+                      <div>
+                        <div className="font-semibold text-slate-950">{product.name}</div>
+                        <div className="text-sm text-slate-500">{product.categoryName} · ${product.price.toFixed(2)}</div>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </MotionBlock>
-    </section>
-  );
-}
+                      <div className="flex gap-2">
+                        <button type="button" className="rounded-full border border-slate-200 px-3 py-2 text-sm" onClick={() => setDraft({ ...draft, id: product.id, name: product.name, slug: product.slug, categoryId: product.categoryId, categoryName: product.categoryName, brand: product.brand, unit: product.unit, price: String(product.price), oldPrice: product.oldPrice ? String(product.oldPrice) : "", shortDescription: product.shortDescription, description: product.description, image: product.image, stockCount: String(product.stockCount), tag: product.tag })}>Edit</button>
+                        <button type="button" className="rounded-full border border-rose-200 px-3 py-2 text-sm text-rose-600" onClick={async () => { await deleteProduct(product.id); setMessage("Product deleted."); await loadDashboard(); }}>Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1.75rem] border border-white/70 bg-white/85 p-5 shadow-[0_18px_55px_rgba(221,210,192,0.24)]">
-      <p className="text-sm uppercase tracking-[0.25em] text-stone-500">{label}</p>
-      <p className="mt-3 text-3xl font-semibold text-stone-900">{value}</p>
+              <section className="rounded-[32px] bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-xl font-semibold text-slate-950">Orders list</h2>
+                  <div className="text-sm text-slate-500">{dashboard.orders.length} total orders</div>
+                </div>
+                <div className="mt-6 space-y-3">
+                  {dashboard.orders.map((order) => (
+                    <div key={order.id} className="rounded-[22px] border border-slate-200 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <div className="font-semibold text-slate-950">{order.orderNumber}</div>
+                          <div className="text-sm text-slate-500">{order.customerName} · ${order.total.toFixed(2)}</div>
+                        </div>
+                        <select className="rounded-full border border-slate-200 px-3 py-2 text-sm" value={order.status} onChange={async (event) => { await updateOrderStatus(order.id, event.target.value as Order["status"]); await loadDashboard(); }}>
+                          {["Pending", "Confirmed", "Packed", "Out for Delivery", "Delivered"].map((status) => (
+                            <option key={status} value={status}>{status}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <div className="space-y-8">
+              <section className="rounded-[32px] bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <h2 className="text-xl font-semibold text-slate-950">Category management</h2>
+                <form
+                  className="mt-5 space-y-3"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    const formData = new FormData(event.currentTarget);
+                    await createCategory({
+                      slug: String(formData.get("slug") ?? ""),
+                      name: String(formData.get("name") ?? ""),
+                      description: String(formData.get("description") ?? ""),
+                      shortDescription: String(formData.get("shortDescription") ?? ""),
+                      accent: "from-emerald-200 via-cyan-100 to-white",
+                      heroImage: String(formData.get("heroImage") ?? ""),
+                      icon: "Grid",
+                    });
+                    setMessage("Category created.");
+                    event.currentTarget.reset();
+                    await loadDashboard();
+                  }}
+                >
+                  <input name="name" required className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Category name" />
+                  <input name="slug" required className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Category slug" />
+                  <input name="heroImage" required className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Category image URL" />
+                  <input name="shortDescription" required className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Short description" />
+                  <textarea name="description" required rows={4} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" placeholder="Description" />
+                  <button type="submit" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">Add category</button>
+                </form>
+                <div className="mt-6 grid gap-2">
+                  {dashboard.categories.map((category) => (
+                    <div key={category.id} className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">{category.name}</div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-[32px] bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <h2 className="text-xl font-semibold text-slate-950">Customer reviews</h2>
+                <div className="mt-5 space-y-3">
+                  {dashboard.reviews.slice(0, 6).map((review) => (
+                    <div key={review.id} className="rounded-[22px] border border-slate-200 p-4">
+                      <div className="font-semibold text-slate-950">{review.title}</div>
+                      <div className="mt-1 text-sm text-slate-500">{review.name} · {review.rating} stars</div>
+                      <div className="mt-2 text-sm leading-7 text-slate-600">{review.text}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-[32px] bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <h2 className="text-xl font-semibold text-slate-950">Contact inquiries</h2>
+                <div className="mt-5 space-y-3">
+                  {dashboard.inquiries.map((inquiry) => (
+                    <div key={inquiry.id} className="rounded-[22px] border border-slate-200 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="font-semibold text-slate-950">{inquiry.subject}</div>
+                        <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{inquiry.status}</div>
+                      </div>
+                      <div className="mt-1 text-sm text-slate-500">{inquiry.name} · {inquiry.type}</div>
+                      <div className="mt-2 text-sm leading-7 text-slate-600">{inquiry.message}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </div>
+          {message ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</div> : null}
+        </div>
+      </div>
     </div>
   );
-}
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-  return date.toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }

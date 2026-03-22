@@ -42,5 +42,5 @@ createServer(async (req, res) => {
 
   serveFile(res, resolve(distDir, "index.html"));
 }).listen(port, () => {
-  console.log(`Restaurant site running at http://127.0.0.1:${port}`);
+  console.log(`Mega Mart site running at http://127.0.0.1:${port}`);
 });

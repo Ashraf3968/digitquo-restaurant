@@ -1,77 +1,83 @@
-import { Link } from "react-router-dom";
-import MotionBlock from "../components/common/MotionBlock";
-import SectionIntro from "../components/common/SectionIntro";
-import { siteMeta } from "../data/site";
-
-const contactDetails = [
-  ["Address", siteMeta.address],
-  ["Phone", siteMeta.phone],
-  ["Email", siteMeta.email],
-  ["Private Dining", "Available for celebrations, executive dinners, and curated hosting."],
-];
+import { useState } from "react";
+import SectionHeading from "../components/common/SectionHeading";
+import { storeHours } from "../data/seed";
+import { submitInquiry } from "../lib/api";
 
 export default function ContactPage() {
+  const [feedback, setFeedback] = useState("");
+
   return (
-    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
-      <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <MotionBlock>
-          <SectionIntro eyebrow="Contact Us" title="A clean, premium contact page that keeps inquiries moving." description="This section combines clear contact details, a polished inquiry form, and a location preview to support both reservations and private event leads." />
-          <div className="mt-8 rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_20px_55px_rgba(221,210,192,0.32)]">
-            <div className="grid gap-4 text-sm leading-7 text-stone-600">
-              {contactDetails.map(([label, value]) => (
-                <div key={label} className="rounded-[1.35rem] bg-stone-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-500">{label}</p>
-                  <p className="mt-1 text-sm leading-7 text-stone-700">{value}</p>
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-12 sm:px-6 lg:px-8">
+      <SectionHeading eyebrow="Contact" title="Reach Mega Mart through support, order, and social channels" description="A complete contact setup with local form handling, support copy, opening hours, map placeholder, and fast-action contact options." />
+      <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="space-y-6">
+          <div className="rounded-[32px] bg-slate-950 p-8 text-white">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[
+                ["Call", "+91 98765 43210"],
+                ["WhatsApp", "+91 98765 43210"],
+                ["Instagram", "@megamart"],
+                ["Email", "help@megamart.com"],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+                  <div className="text-sm uppercase tracking-[0.24em] text-emerald-200">{label}</div>
+                  <div className="mt-2 text-lg font-semibold">{value}</div>
                 </div>
               ))}
             </div>
-            <div className="mt-6 rounded-[1.75rem] bg-stone-100 p-4 text-sm text-stone-500">Google Maps embed placeholder for the restaurant location.</div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {siteMeta.hours.map((hour) => (
-                <span key={hour} className="rounded-full border border-stone-200 bg-white px-4 py-2 text-xs font-medium text-stone-600">{hour}</span>
+          </div>
+          <div className="rounded-[32px] bg-white p-8 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+            <div className="text-lg font-semibold text-slate-950">Opening Hours</div>
+            <div className="mt-5 grid gap-3 text-sm text-slate-600">
+              {storeHours.map((item) => (
+                <div key={item.label} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                  <span>{item.label}</span>
+                  <span>{item.value}</span>
+                </div>
               ))}
             </div>
+            <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200">
+              <div className="flex h-56 items-center justify-center bg-[linear-gradient(135deg,#d1fae5,#ecfeff)] text-center text-sm text-slate-600">
+                Map placeholder
+                <br />
+                27 Market Square, Kolkata
+              </div>
+            </div>
           </div>
-        </MotionBlock>
-
-        <MotionBlock delay={0.08} className="rounded-[2.25rem] border border-white/70 bg-white/85 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.34)] sm:p-8">
-          <form className="grid gap-5">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">Name</label>
-                <input className="form-input" placeholder="Your name" />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">Email</label>
-                <input className="form-input" placeholder="you@example.com" />
-              </div>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">Phone</label>
-                <input className="form-input" placeholder="+91 98765 43210" />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">Inquiry Type</label>
-                <select className="form-input">
-                  <option>Reservation support</option>
-                  <option>Private dining</option>
-                  <option>General inquiry</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-stone-700">Message</label>
-              <textarea rows={6} className="form-input" placeholder="Tell us how we can help" />
-            </div>
-            <div className="flex flex-wrap items-center gap-4">
-              <button type="button" className="w-fit rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-stone-800">Send inquiry</button>
-              <Link to="/reservations" className="text-sm font-semibold text-stone-900 transition hover:text-amber-700">Need a table instead? Reserve now</Link>
-            </div>
-          </form>
-        </MotionBlock>
+        </div>
+        <form
+          className="space-y-5 rounded-[32px] bg-white p-8 shadow-[0_16px_50px_rgba(15,23,42,0.05)]"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const result = await submitInquiry({
+              name: String(formData.get("name") ?? ""),
+              email: String(formData.get("email") ?? ""),
+              phone: String(formData.get("phone") ?? ""),
+              subject: String(formData.get("subject") ?? ""),
+              message: String(formData.get("message") ?? ""),
+              type: String(formData.get("type") ?? "contact") as "contact" | "support" | "order",
+            });
+            setFeedback(result.mailPreview);
+            event.currentTarget.reset();
+          }}
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <input name="name" required className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400" placeholder="Your name" />
+            <input name="email" required className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400" placeholder="Email address" />
+            <input name="phone" required className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400" placeholder="Phone number" />
+            <select name="type" className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400">
+              <option value="contact">General contact</option>
+              <option value="support">Support request</option>
+              <option value="order">Order inquiry</option>
+            </select>
+          </div>
+          <input name="subject" required className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400" placeholder="Subject" />
+          <textarea name="message" required rows={6} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-400" placeholder="Tell us how we can help." />
+          <button type="submit" className="rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white">Send message</button>
+          {feedback ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{feedback}</div> : null}
+        </form>
       </div>
-    </section>
+    </div>
   );
 }
-

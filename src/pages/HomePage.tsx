@@ -1,191 +1,170 @@
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import MotionBlock from "../components/common/MotionBlock";
-import SectionIntro from "../components/common/SectionIntro";
-import StarRating from "../components/common/StarRating";
-import { faqItems, featuredDishes, galleryImages, highlights, siteMeta, testimonials, videoItems } from "../data/site";
+import CategoryCard from "../components/store/CategoryCard";
+import ProductCard from "../components/store/ProductCard";
+import SectionHeading from "../components/common/SectionHeading";
+import { useCart } from "../context/CartContext";
+import { createInitialStore } from "../data/seed";
 
-const serviceMoments = [
-  "Tasting menus guided by seasonal ingredients and fire-led techniques.",
-  "Private dining experiences for corporate hosting and celebrations.",
-  "Concierge-style reservations designed to convert from every screen size.",
-];
+const store = createInitialStore();
 
 export default function HomePage() {
+  const { addItem } = useCart();
+  const featured = store.products.filter((product) => product.isFeatured).slice(0, 8);
+  const newArrivals = store.products.filter((product) => product.isNewArrival).slice(0, 4);
+  const offers = store.products.filter((product) => product.isDiscounted).slice(0, 4);
+
   return (
-    <>
-      <section className="mx-auto grid max-w-[118rem] gap-10 px-3 pb-16 pt-8 sm:px-4 lg:grid-cols-[1.05fr_0.95fr] xl:px-5 2xl:px-6 lg:pb-24 lg:pt-12 xl:gap-16">
-        <MotionBlock className="flex flex-col justify-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-700/80">Luxury Dining Experience</p>
-          <h1 className="mt-6 max-w-3xl font-serif text-5xl leading-[0.95] text-stone-900 sm:text-6xl lg:text-7xl">
-            Light-filled dining with a refined fire-led menu.
-          </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-stone-600">
-            {siteMeta.tagline} Designed as a polished, trust-building restaurant website that feels worthy of a premium hospitality portfolio.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link to="/reservations" className="rounded-full bg-stone-900 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-stone-900/10 transition duration-300 hover:-translate-y-1 hover:bg-stone-800 hover:shadow-2xl">
-              Book a Table
+    <div className="pb-24">
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-20">
+        <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }} className="space-y-8 rounded-[36px] bg-slate-950 px-8 py-10 text-white shadow-[0_30px_90px_rgba(15,23,42,0.28)] md:px-10 md:py-12">
+          <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200">
+            Premium Family Retail
+          </div>
+          <div className="space-y-5">
+            <h1 className="font-display max-w-2xl text-5xl leading-tight md:text-6xl">
+              Modern supermarket shopping with polished delivery-first convenience.
+            </h1>
+            <p className="max-w-2xl text-lg leading-8 text-slate-300">
+              Mega Mart brings fresh groceries, pantry staples, household essentials, and premium everyday products into one enterprise-grade retail experience.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link to="/products" className="rounded-full bg-emerald-500 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-400">
+              Shop Now
             </Link>
-            <Link to="/menu" className="rounded-full border border-stone-300 bg-white px-6 py-3.5 text-sm font-semibold text-stone-800 transition duration-300 hover:-translate-y-1 hover:border-amber-300 hover:bg-amber-50">
-              View Menu
+            <Link to="/categories" className="rounded-full border border-white/20 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-white/10">
+              Browse Categories
             </Link>
           </div>
-          <div className="mt-10 grid max-w-xl grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {[
-              ["4.8/5", "Guest rating"],
-              ["12K+", "Annual diners"],
-              ["Private", "Event bookings"],
+              ["60+", "Realistic products"],
+              ["Same-day", "Priority delivery"],
+              ["4.8/5", "Customer satisfaction"],
             ].map(([value, label]) => (
-              <div key={label} className="rounded-[1.5rem] border border-white/70 bg-white/78 p-4 shadow-[0_18px_45px_rgba(221,210,192,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(214,188,152,0.28)]">
-                <div className="text-2xl font-semibold text-stone-900">{value}</div>
-                <div className="mt-1 text-sm text-stone-500">{label}</div>
+              <div key={label} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+                <div className="text-3xl font-semibold">{value}</div>
+                <div className="mt-2 text-sm text-slate-300">{label}</div>
               </div>
             ))}
           </div>
-          <div className="mt-8 grid gap-3 sm:max-w-xl">
-            {serviceMoments.map((moment) => (
-              <div key={moment} className="flex items-start gap-3 rounded-[1.35rem] bg-white/70 px-4 py-3 shadow-[0_16px_35px_rgba(221,210,192,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(214,188,152,0.24)]">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-amber-500" />
-                <p className="text-sm leading-7 text-stone-600">{moment}</p>
-              </div>
-            ))}
-          </div>
-        </MotionBlock>
-        <MotionBlock delay={0.1} className="relative">
-          <div className="absolute inset-x-0 top-6 h-32 bg-[radial-gradient(circle_at_20%_40%,rgba(251,191,36,0.18),transparent_38%)]" />
-          <img
-            src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1400&q=80"
-            alt="Elegant restaurant dining room"
-            className="h-full min-h-[420px] w-full rounded-[2rem] object-cover shadow-[0_35px_90px_rgba(212,187,156,0.45)] transition duration-700 hover:scale-[1.01] sm:min-h-[520px]"
-          />
-          <div className="absolute bottom-4 left-4 right-4 rounded-[1.75rem] border border-white/70 bg-white/92 p-5 shadow-xl transition duration-300 hover:-translate-y-1 sm:bottom-6 sm:left-6 sm:right-auto">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Signature ambiance</p>
-            <p className="mt-2 max-w-xs text-sm leading-6 text-stone-700">Soft natural light, sculpted interiors, and an atmosphere designed for memorable evenings.</p>
-          </div>
-        </MotionBlock>
-      </section>
+        </motion.div>
 
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <SectionIntro eyebrow="Featured Dishes" title="A menu presentation that feels editorial, rich, and beautifully commercial." description="Curated dish cards give restaurant owners a realistic preview of how premium food can be positioned online." />
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {featuredDishes.map((dish, index) => (
-            <MotionBlock key={dish.name} delay={index * 0.08} className="group overflow-hidden rounded-[2rem] border border-white/70 bg-white/88 shadow-[0_22px_60px_rgba(221,210,192,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_80px_rgba(210,184,150,0.42)]">
-              <img src={dish.image} alt={dish.name} className="h-72 w-full object-cover transition duration-500 group-hover:scale-105" />
-              <div className="p-6">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-lg font-semibold text-stone-900">{dish.name}</p>
-                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{dish.tag}</span>
-                </div>
-                <p className="mt-4 text-sm leading-7 text-stone-600">{dish.description}</p>
-                <div className="mt-6 flex items-center justify-between gap-4">
-                  <span className="text-lg font-semibold text-stone-900">{dish.price}</span>
-                  <Link to="/menu" className="text-sm font-semibold text-stone-900 transition hover:text-amber-700">See full menu</Link>
-                </div>
-              </div>
-            </MotionBlock>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <div className="grid gap-10 rounded-[2.5rem] border border-white/70 bg-white/74 p-6 shadow-[0_24px_80px_rgba(221,210,192,0.4)] lg:grid-cols-[0.9fr_1.1fr] lg:p-12">
-          <MotionBlock>
-            <SectionIntro eyebrow="About Maison Ember" title="Built around calm luxury, quality ingredients, and impeccable hospitality." description="This concept showcases how an agency-grade website can balance beautiful storytelling with strong booking-focused UX." />
-            <Link to="/about" className="mt-8 inline-flex rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 transition duration-300 hover:-translate-y-1 hover:border-amber-300 hover:bg-amber-50">Discover our story</Link>
-          </MotionBlock>
-          <MotionBlock delay={0.08} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {highlights.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] bg-stone-50 p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(221,210,192,0.28)]">
-                <h3 className="text-lg font-semibold text-stone-900">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-stone-600">{item.text}</p>
-              </div>
-            ))}
-          </MotionBlock>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <SectionIntro eyebrow="Testimonials" title="Social proof that feels polished, trustworthy, and conversion-ready." description="Premium review cards help potential guests and clients feel immediate confidence in the restaurant brand." />
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
-            <MotionBlock key={testimonial.name} delay={index * 0.08} className="rounded-[2rem] border border-white/70 bg-white/88 p-6 shadow-[0_20px_55px_rgba(221,210,192,0.32)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(210,184,150,0.36)]">
-              <div className="flex items-center gap-4">
-                <div className="grid h-14 w-14 place-items-center rounded-full bg-amber-100 text-sm font-semibold text-amber-800">{testimonial.avatar}</div>
+        <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.55 }} className="grid gap-6">
+          <div className="overflow-hidden rounded-[36px] border border-white/60 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+            <img className="h-[320px] w-full object-cover" src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80" alt="Mega Mart hero" />
+            <div className="space-y-4 p-7">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-stone-900">{testimonial.name}</p>
-                  <p className="text-sm text-stone-500">{testimonial.role}</p>
+                  <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">This Week</div>
+                  <div className="mt-2 text-2xl font-semibold text-slate-950">Fresh produce, bakery, and family bundles</div>
                 </div>
+                <div className="rounded-3xl bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-700">Up to 25% off</div>
               </div>
-              <p className="mt-5 text-sm leading-7 text-stone-600">{testimonial.quote}</p>
-              <div className="mt-4 flex items-center justify-between gap-4">
-                <StarRating rating={testimonial.rating} size="sm" />
-                <Link to="/reviews" className="text-sm font-semibold text-stone-900 transition hover:text-amber-700">Read all reviews</Link>
-              </div>
-            </MotionBlock>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <SectionIntro eyebrow="Experience" title="Immersive restaurant reels that make the brand feel alive online." description="The homepage now uses real food and restaurant videos so the portfolio demo feels richer, more cinematic, and more convincing for clients." />
-        <div className="mt-10 grid gap-6 lg:grid-cols-3">
-          {videoItems.map((video, index) => (
-            <MotionBlock key={video.title} delay={index * 0.08} className="group overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-[0_18px_55px_rgba(221,210,192,0.32)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_68px_rgba(210,184,150,0.35)]">
-              <div className="relative h-72 overflow-hidden">
-                <video src={video.videoUrl} poster={video.image} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" autoPlay muted loop playsInline preload="metadata" />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/65 to-transparent" />
-                <div className="absolute left-5 top-5 rounded-full bg-white/88 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-stone-900 shadow-lg">
-                  {video.tag}
-                </div>
-                <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-white">
-                  <div>
-                    <p className="font-semibold">{video.title}</p>
-                    <p className="text-sm text-white/80">{video.duration}</p>
-                  </div>
-                  <Link to="/experience" className="grid h-12 w-12 place-items-center rounded-full bg-white/20 text-sm font-semibold transition duration-300 hover:scale-105">
-                    Play
-                  </Link>
-                </div>
-              </div>
-              <div className="p-6 text-sm leading-7 text-stone-600">{video.description}</div>
-            </MotionBlock>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <SectionIntro eyebrow="Gallery" title="A refined visual stream of cuisine, interiors, and private dining moments." description="The grid is designed to feel spacious and portfolio-worthy on desktop while staying clean and touch-friendly on mobile." />
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {galleryImages.map((image, index) => (
-            <MotionBlock key={image} delay={index * 0.04} className="overflow-hidden rounded-[2rem] shadow-[0_16px_40px_rgba(221,210,192,0.22)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(210,184,150,0.3)]">
-              <img src={image} alt={`Gallery ${index + 1}`} className="h-72 w-full object-cover transition duration-500 hover:scale-105" />
-            </MotionBlock>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <div className="rounded-[2.5rem] bg-stone-900 px-6 py-12 text-white shadow-[0_28px_80px_rgba(28,25,23,0.14)] lg:flex lg:items-center lg:justify-between lg:px-12">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-300/80">Reservation CTA</p>
-            <h2 className="mt-4 font-serif text-3xl leading-tight sm:text-4xl">Turn interest into bookings with a clear, elegant reservation journey.</h2>
-            <p className="mt-4 text-base leading-8 text-white/70">Strategically placed call-to-actions keep the experience polished while improving conversion across mobile and desktop.</p>
+              <p className="text-sm leading-7 text-slate-600">Seasonal produce, breakfast staples, and curated home essentials selected for fast local delivery and polished in-store collection.</p>
+            </div>
           </div>
-          <Link to="/reservations" className="mt-8 inline-flex rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-stone-900 transition duration-300 hover:-translate-y-1 lg:mt-0">Reserve a table</Link>
-        </div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Support</div>
+              <div className="mt-3 text-2xl font-semibold text-slate-950">Call, WhatsApp, or message us in minutes</div>
+              <div className="mt-4 text-sm leading-7 text-slate-600">Live service for delivery support, bulk orders, and product availability.</div>
+            </div>
+            <div className="rounded-[30px] bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white shadow-[0_18px_60px_rgba(16,185,129,0.28)]">
+              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-100">Opening Hours</div>
+              <div className="mt-3 text-2xl font-semibold">Monday - Saturday</div>
+              <div className="mt-1 text-emerald-100">8:00 AM - 10:00 PM</div>
+              <div className="mt-4 border-t border-white/20 pt-4 text-sm text-emerald-50">Sunday: 9:00 AM - 8:00 PM</div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
-      <section className="mx-auto max-w-[118rem] px-3 py-16 sm:px-4 xl:px-5 2xl:px-6">
-        <SectionIntro eyebrow="FAQ" title="Answer common questions without interrupting the premium feel of the site." description="A simple, elegant FAQ helps move visitors toward reservations, private dining, or contact inquiries." />
-        <div className="mt-10 grid gap-4 lg:grid-cols-2">
-          {faqItems.map((faq, index) => (
-            <MotionBlock key={faq.question} delay={index * 0.05} className="rounded-[1.75rem] border border-white/70 bg-white/88 p-6 shadow-[0_18px_50px_rgba(221,210,192,0.28)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(210,184,150,0.34)]">
-              <h3 className="text-lg font-semibold text-stone-900">{faq.question}</h3>
-              <p className="mt-3 text-sm leading-7 text-stone-600">{faq.answer}</p>
-            </MotionBlock>
+      <section className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+        <SectionHeading eyebrow="Categories" title="Shop the departments customers return to every week" description="A complete supermarket mix designed around daily-use products, family convenience, and a strong premium retail presentation." />
+        <div className="grid gap-6 md:grid-cols-3 xl:grid-cols-5">
+          {store.categories.slice(0, 10).map((category) => (
+            <CategoryCard key={category.id} category={category} />
           ))}
         </div>
       </section>
-    </>
+
+      <section className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <SectionHeading eyebrow="Bestsellers" title="Top-moving products across fresh, pantry, and household aisles" description="High-converting essentials with premium imagery, realistic pricing, and a strong supermarket card layout." />
+          <Link to="/products" className="text-sm font-semibold text-emerald-700">View full catalog</Link>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {featured.map((product) => (
+            <ProductCard key={product.id} product={product} onAddToCart={(item) => addItem(item, 1)} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
+        <div className="rounded-[36px] bg-white p-8 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+          <SectionHeading eyebrow="Why Mega Mart" title="Built around trust, speed, and real-world retail quality" description="Every section is designed to feel like a commercial platform: polished hierarchy, clear service cues, and friction-light ordering." />
+          <div className="mt-8 grid gap-5">
+            {[
+              ["Freshness controlled", "Temperature-managed packing for produce, dairy, and frozen goods."],
+              ["Enterprise-grade service", "Support coverage for consumers, offices, and high-frequency household ordering."],
+              ["Reliable convenience", "Search, filters, cart, and checkout optimized for mobile-first grocery behavior."],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-[24px] border border-slate-200 p-5">
+                <div className="text-lg font-semibold text-slate-950">{title}</div>
+                <p className="mt-2 text-sm leading-7 text-slate-600">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            {newArrivals.map((product) => (
+              <ProductCard key={product.id} product={product} onAddToCart={(item) => addItem(item, 1)} />
+            ))}
+          </div>
+          <div className="rounded-[36px] bg-slate-950 p-8 text-white">
+            <div className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-200">Media & Highlights</div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              {store.media.map((media) => (
+                <div key={media.id} className="overflow-hidden rounded-[26px] border border-white/10 bg-white/5">
+                  <img className="h-44 w-full object-cover" src={media.thumbnail} alt={media.title} />
+                  <div className="space-y-2 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold">{media.title}</div>
+                      <div className="text-xs text-emerald-200">{media.duration}</div>
+                    </div>
+                    <div className="text-sm leading-6 text-slate-300">{media.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
+        <SectionHeading eyebrow="Offers" title="Promotions that feel like a real weekly retail campaign" description="Discounted products surfaced with strong visual hierarchy and a clean commercial card system." />
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {offers.map((product) => (
+            <ProductCard key={product.id} product={product} onAddToCart={(item) => addItem(item, 1)} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {store.testimonials.map((testimonial) => (
+            <div key={testimonial.id} className="rounded-[30px] border border-slate-200 bg-white p-7 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+              <div className="text-amber-500">{"★".repeat(testimonial.rating)}</div>
+              <p className="mt-4 text-base leading-8 text-slate-700">“{testimonial.quote}”</p>
+              <div className="mt-6 text-sm font-semibold text-slate-950">{testimonial.name}</div>
+              <div className="text-sm text-slate-500">{testimonial.role}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

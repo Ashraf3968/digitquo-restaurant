@@ -1,55 +1,55 @@
-import MotionBlock from "../components/common/MotionBlock";
-import SectionIntro from "../components/common/SectionIntro";
-import { storyMoments } from "../data/site";
+import SectionHeading from "../components/common/SectionHeading";
+import { createInitialStore } from "../data/seed";
 
-const detailCards = [
-  ["Our mission", "To create a dining experience that feels composed, seasonal, and deeply welcoming from arrival to final course."],
-  ["Quality ingredients", "From premium seafood to produce-led seasonal plates, ingredients drive the story behind every menu change."],
-  ["Meet the chef", "Chef Elena Moretti leads the kitchen with modern restraint, warmth, and precision shaped by European fine dining."],
-];
-
-const pillars = [
-  "Fresh local produce and carefully sourced premium proteins.",
-  "A bright, modern dining room with private dining capability.",
-  "Service designed to feel attentive, elegant, and never rushed.",
-];
+const store = createInitialStore();
 
 export default function AboutPage() {
   return (
-    <section className="mx-auto max-w-[118rem] px-3 py-12 sm:px-4 xl:px-5 2xl:px-6 lg:py-16">
-      <SectionIntro eyebrow="About Us" title="A bright, elevated restaurant concept shaped by detail and hospitality." description="This page balances trust-building storytelling, chef identity, ingredient quality, and a premium hospitality atmosphere." />
-
-      <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
-        <MotionBlock className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_24px_70px_rgba(221,210,192,0.35)] sm:p-8">
-          {storyMoments.map((moment) => (
-            <p key={moment} className="mb-6 text-base leading-8 text-stone-600 last:mb-0">{moment}</p>
-          ))}
-          <div className="mt-8 grid gap-3">
-            {pillars.map((pillar) => (
-              <div key={pillar} className="flex items-start gap-3 rounded-[1.35rem] bg-stone-50 px-4 py-3">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-amber-500" />
-                <p className="text-sm leading-7 text-stone-600">{pillar}</p>
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-12 sm:px-6 lg:px-8">
+      <section className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="space-y-6">
+          <SectionHeading eyebrow="About Mega Mart" title="A premium supermarket brand built around dependable daily convenience" description="Mega Mart is positioned as a trusted urban retail destination blending fresh food, household essentials, and seamless digital ordering into one polished experience." />
+          <div className="grid gap-4">
+            {[
+              ["Our story", "Mega Mart began as a modern neighborhood retail concept focused on premium presentation, broad category coverage, and service-first operations."],
+              ["Mission", "Deliver reliable quality across groceries, fresh produce, personal care, household essentials, and convenience categories in one easy order flow."],
+              ["Vision", "Set a higher standard for supermarket UX by making local retail feel organized, premium, and technology-forward."],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+                <div className="text-lg font-semibold text-slate-950">{title}</div>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{text}</p>
               </div>
             ))}
           </div>
-        </MotionBlock>
+        </div>
+        <div className="overflow-hidden rounded-[36px] border border-white/60 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+          <img className="h-full min-h-[420px] w-full object-cover" src="https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=1200&q=80" alt="Mega Mart interior" />
+        </div>
+      </section>
 
-        <MotionBlock delay={0.08} className="grid gap-6 sm:grid-cols-2">
-          <img className="h-full min-h-[260px] rounded-[2rem] object-cover" src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=80" alt="Chef preparing food" />
-          <img className="h-full min-h-[260px] rounded-[2rem] object-cover" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80" alt="Restaurant interior" />
-          <img className="h-full min-h-[260px] rounded-[2rem] object-cover sm:col-span-2" src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80" alt="Private dining room" />
-        </MotionBlock>
-      </div>
-
-      <div className="mt-12 grid gap-6 lg:grid-cols-3">
-        {detailCards.map(([title, text], index) => (
-          <MotionBlock key={title} delay={index * 0.06} className="rounded-[2rem] bg-white/80 p-6 shadow-[0_18px_45px_rgba(221,210,192,0.3)]">
-            <h3 className="text-xl font-semibold text-stone-900">{title}</h3>
-            <p className="mt-4 text-sm leading-7 text-stone-600">{text}</p>
-          </MotionBlock>
+      <section className="grid gap-6 md:grid-cols-3">
+        {[
+          ["Why customers trust us", "Curated product mix, clear pricing, premium service cues, and a clean enterprise-grade presentation."],
+          ["Quality promise", "Fresh categories are handled with care, and pantry, wellness, and home products are selected for consistency and reliability."],
+          ["Delivery & service", "Fast local dispatch, helpful contact channels, and easy online order handling built for real-world household shopping."],
+        ].map(([title, text]) => (
+          <div key={title} className="rounded-[30px] bg-slate-950 p-7 text-white">
+            <div className="text-xl font-semibold">{title}</div>
+            <p className="mt-3 text-sm leading-7 text-slate-300">{text}</p>
+          </div>
         ))}
-      </div>
-    </section>
+      </section>
+
+      <section className="rounded-[36px] bg-white p-8 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
+        <SectionHeading eyebrow="Store Scope" title="Fifteen live retail categories seeded for realistic portfolio presentation" description="The catalog covers all the departments expected from a true Mega Mart business, including groceries, produce, dairy, beverages, snacks, baby care, frozen foods, and more." />
+        <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+          {store.categories.map((category) => (
+            <div key={category.id} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-700">
+              {category.name}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
-
